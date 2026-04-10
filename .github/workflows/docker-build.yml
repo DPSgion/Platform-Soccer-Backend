@@ -80,7 +80,7 @@ jobs:
             docker run -d \
               --name $CONTAINER \
               --restart unless-stopped \
-              -p $PORT:3000 \
+              -p 127.0.0.1:$PORT:3000 \
               -e ENV=$ENV \
               -e DB_HOST=$DB_HOST \
               -e DB_USER=$DB_USER \
