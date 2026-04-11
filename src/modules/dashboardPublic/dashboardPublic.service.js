@@ -61,4 +61,19 @@ exports.getTournaments = async () => {
   return tournaments;
 };
 //Chi tiết giải đấu và các trận đấu liên quan
+exports.getTournamentMatches = async (tournamentId) => {
+  const tournament = tournaments.find((t) => t.id === tournamentId);
 
+  if (!tournament) {
+    throw new Error("Tournament not found");
+  }
+
+  const tournamentMatches = matches.filter(
+    (m) => m.tournament_id === tournamentId,
+  );
+
+  return {
+    tournament,
+    matches: tournamentMatches,
+  };
+};
