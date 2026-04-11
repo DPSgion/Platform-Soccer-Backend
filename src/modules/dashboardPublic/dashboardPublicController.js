@@ -1,4 +1,4 @@
-const dashboardPublicService = require("./dashboardPublic.service");
+const dashboardPublicService = require("./dashboardPublicService");
 exports.getTournaments = async (req, res) => {
   try {
     const data = await dashboardPublicService.getTournaments();
