@@ -6,6 +6,7 @@ const routes = require("./routes");
 
 app.use(express.json());
 
+
 app.get("/", (req, res) => {
     res.json({
         message: "Cupzone Backend Running"
