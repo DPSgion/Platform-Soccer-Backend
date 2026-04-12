@@ -19,6 +19,18 @@ app.get("/health", (req, res) => {
     });
 });
 
+app.get("/test", (req, res) => {
+    res.send(`
+        <h2>LOGIN TEST</h2>
+        <form method="POST" action="/auth/login">
+            <input name="email" value="test@gmail.com"/><br/>
+            <input name="password" value="123456"/><br/>
+            <button type="submit">Login</button>
+        </form>
+    `);
+});
+
+app.use(express.urlencoded({ extended: true }));
 app.use("/", routes);
 
 module.exports = app;
