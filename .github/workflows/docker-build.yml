@@ -64,9 +64,9 @@ jobs:
           BRANCH_NAME: ${{ needs.build.outputs.clean_ref }}
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           REGISTRY: ${{ env.REGISTRY }}
-          ENV: ${{ vars.ENV }}
-          PORT: ${{ vars.PORT }}
-          CONTAINER: ${{ vars.CONTAINER }}
+          ENV: development
+          PORT: 30011
+          CONTAINER: platform-soccer-backend
 
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_USER: ${{ secrets.DB_USER }}
