@@ -2,7 +2,7 @@ const express = require("express");
 const mysql = require("mysql2/promise"); 
 const cors = require("cors");
 const routes = require("./routes");
-const config = require("./dbconfig");
+const config = require("./dbConfig");
 
 const app = express();
 
