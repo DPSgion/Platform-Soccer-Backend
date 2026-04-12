@@ -1,18 +1,15 @@
-const mysql = require("mysql2");
+require('dotenv').config();
 
-const dbConfig = mysql.createPool ({
+const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT) || 3306,
     user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
+    password: process.env.DB_PASS || '', 
     database: process.env.DB_NAME || 'soccer_platform',
 
-    pool: {
-        max: 5,
-        min: 0,
-        acquire: 30000,
-        idle: 10000
-    }
-});
+    waitForConnections: true,
+    connectionLimit: 5,
+    queueLimit: 0
+};
 
-module.exports = dbConfig.promise();
+module.exports = dbConfig;
