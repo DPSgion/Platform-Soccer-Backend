@@ -1,0 +1,86 @@
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login (fake)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  example: "test@gmail.com"
+                password:
+                  type: string
+                  example: "123456"
+      responses:
+        200:
+          description: Login success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              example:
+                message: "ĐĂNG NHẬP THÀNH CÔNG (FAKE)"
+                token: "fake-jwt-token"
+                user:
+                  id: 1
+                  email: "test@gmail.com"
+
+        401:
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "EMAIL HOẶC MẬT KHẨU KHÔNG ĐÚNG."
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register (fake)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  example: "test@gmail.com"
+                password:
+                  type: string
+                  example: "123456"
+      responses:
+        201:
+          description: Register success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+              example:
+                message: "ĐĂNG KÝ THÀNH CÔNG (FAKE)"
+                user:
+                  id: 1
+                  email: "test@gmail.com"
+
+        400:
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidEmail:
+                  value:
+                    message: "EMAIL KHÔNG HỢP LỆ."
+                invalidPassword:
+                  value:
+                    message: "MẬT KHẨU PHẢI >= 6 KÝ TỰ."
