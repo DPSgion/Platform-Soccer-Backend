@@ -1,6 +1,5 @@
 const express = require("express");
 const mysql = require("mysql2/promise"); 
-const cors = require("cors");
 const routes = require("./routes");
 const config = require("./dbConfig");
 
@@ -8,7 +7,6 @@ const app = express();
 
 const pool = mysql.createPool(config);
 
-app.use(cors());
 app.use(express.json());
 
 app.get("/test-db", async (req, res) => {
