@@ -1,13 +1,12 @@
 const express = require("express");
-const mysql = require("mysql2/promise"); 
 const routes = require("./routes");
-const config = require("./dbConfig");
+const pool = require("./dbConfig");
 
 const app = express();
-
-const pool = mysql.createPool(config);
+const { errorMiddleware } = require("./middlewares/errorMiddleware");
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.get("/test-db", async (req, res) => {
     try {
@@ -24,7 +23,7 @@ app.get("/test-db", async (req, res) => {
         return res.status(500).json({
             success: false,
             error: err.message,
-            host_checked: config.host 
+            host_checked: process.env.DB_HOST || "127.0.0.1"
         });
     }
 });
@@ -41,6 +40,18 @@ app.get("/health", (req, res) => {
     });
 });
 
-app.use("/", routes);
+app.get("/test", (req, res) => {
+    res.send(`
+        <h2>LOGIN TEST</h2>
+        <form method="POST" action="/auth/login">
+            <input name="email" value="test@gmail.com"/><br/>
+            <input name="password" value="123456"/><br/>
+            <button type="submit">Login</button>
+        </form>
+    `);
+});
+
+app.use("/api", routes);
+app.use(errorMiddleware);
 
 module.exports = app;
