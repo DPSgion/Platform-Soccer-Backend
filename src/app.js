@@ -1,10 +1,8 @@
 const express = require("express");
-const mysql = require("mysql2/promise"); 
 const routes = require("./routes");
-const config = require("./dbConfig");
+const pool = require("./dbConfig");
 
 const app = express();
-const routes = require("./routes");
 const { errorMiddleware } = require("./middlewares/errorMiddleware");
 
 app.use(express.json());
@@ -25,7 +23,7 @@ app.get("/test-db", async (req, res) => {
         return res.status(500).json({
             success: false,
             error: err.message,
-            host_checked: config.host 
+            host_checked: process.env.DB_HOST || "127.0.0.1"
         });
     }
 });
