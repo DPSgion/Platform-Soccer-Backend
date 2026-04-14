@@ -28,8 +28,20 @@ const getTeamById = (req, res) => {
     data: team
   });
 };
+const getTeamMembers = (req, res) => {
+  const { teamId } = req.params;
+  const members = teamService.getTeamMembers(teamId); 
+  return res.status(200).json({
+    success: true,
+    message: "Get team members successfully",
+    data: members
+  });
+}
+
+
 
 module.exports = {
   getAllTeams,
-  getTeamById
+  getTeamById,
+  getTeamMembers
 };
