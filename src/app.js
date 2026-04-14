@@ -3,8 +3,10 @@ const express = require("express");
 const app = express();
 
 const routes = require("./routes");
+const { errorMiddleware } = require("./middlewares/errorMiddleware");
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 
 app.get("/", (req, res) => {
@@ -30,7 +32,7 @@ app.get("/test", (req, res) => {
     `);
 });
 
-app.use(express.urlencoded({ extended: true }));
-app.use("/", routes);
+app.use("/api", routes);
+app.use(errorMiddleware);
 
 module.exports = app;
