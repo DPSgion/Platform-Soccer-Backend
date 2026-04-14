@@ -1,3 +1,4 @@
+// Dât mock
 const teams = [
   {
     id: "t1",
@@ -73,9 +74,13 @@ const getTeamById = (teamId) => {
 };
 const getTeamMembers = (teamId) =>
   teamMembers.filter((member) => member.team_id === teamId);
-
+const getTeamMemberById = (teamId, playerId) =>
+  teamMembers.find(
+    (member) => member.team_id === teamId && member.id === playerId,
+  );
 module.exports = {
   getAllTeams,
   getTeamById,
-  getTeamMembers
+  getTeamMembers,
+  getTeamMemberById
 };
