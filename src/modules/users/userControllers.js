@@ -2,7 +2,8 @@ const userServices = require('./userServices');
 
 const getUser = async (req, res) => {
     try {
-        const user = await userServices.getUser();
+        const userId = req.user.id;
+        const user = await userServices.getUser(userId);
 
         res.json({
             success: true,
@@ -10,7 +11,7 @@ const getUser = async (req, res) => {
         });
     } catch (error) {
         res.status(400).json({
-            message: "Error getting user"
+            message: error.message
         });
     }
 };
