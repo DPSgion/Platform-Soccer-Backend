@@ -2,8 +2,13 @@ const express = require("express");
 const router = express.Router();
 
 const controller = require("./authController");
+const { registerValidator, normalizeRegisterInput } = require("./authValidator");
 
-router.post("/login", controller.login);
-router.post("/register", controller.register);
+router.post(
+	"/register",
+	normalizeRegisterInput,
+	registerValidator,
+	controller.register
+);
 
 module.exports = router;
