@@ -1,4 +1,4 @@
-const db = require("./db");
+const db = require("../../dbConfig");
 
 const getUser = async (userId) => {
     const [rows] = await db.execute(
