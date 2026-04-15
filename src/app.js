@@ -51,7 +51,7 @@ app.get("/test", (req, res) => {
     `);
 });
 
-app.use("/api", routes);
+app.use("/", routes);
 app.use(errorMiddleware);
 
 module.exports = app;
