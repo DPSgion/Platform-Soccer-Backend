@@ -29,9 +29,7 @@ const updateUser = async (userId, data) => {
     return await getUser(userId);
 };
 
-const updateAvatar = async (userId, data) => {
-    const { avatar_url } = data;
-
+const updateAvatar = async (userId, avatar_url) => {
     if (!avatar_url) {
         throw new Error("No avatar URL provided");
     }
