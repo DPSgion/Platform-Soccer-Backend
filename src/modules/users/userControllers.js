@@ -47,14 +47,23 @@ const updateUser = async (req, res) => {
 const updateAvatar = async (req, res) => {
     try {
         const userId = req.user.id;
-        const result = await userServices.updateAvatar(userId, req.body);
+        if(!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: "No file uploaded"
+            });
+        }
 
+        const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+        const user = await userServices.updateAvatar(userId, { avatar_url: avatarUrl });
         res.json({
-            message: "User avatar updated successfully",
-            data: result
+            success: true,
+            message: "Avatar updated successfully",
+            data: user
         });
     } catch (error) {
-        res.status(404).json({
+        res.status(500).json({
+            success: false,
             message: error.message
         });
     }
