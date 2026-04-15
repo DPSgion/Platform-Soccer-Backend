@@ -29,16 +29,14 @@ const updateUser = async (userId, data) => {
     return await getUser(userId);
 };
 
-const updateAvatar = async (userId, data) => {
-    const { avatar_url } = data;
-
+const updateAvatar = async (userId, avatar_url) => {
     if (!avatar_url) {
         throw new Error("No avatar URL provided");
     }
 
     await db.execute(
         `UPDATE users 
-        SET avatar_url = COALESCE(?, avatar_url), updated_at = NOW() 
+        SET avatar_url = ?, updated_at = NOW() 
         WHERE id = ?`, 
         [avatar_url, userId]
     );
