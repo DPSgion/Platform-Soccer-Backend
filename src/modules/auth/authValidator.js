@@ -5,7 +5,7 @@ const { AppError } = require("../../middlewares/errorMiddleware");
 
 function normalizeRegisterInput(req, res, next) {
     if (typeof req.body?.email === "string")
-        req.body.email = req.body.email.trim().toLowerCase();
+        req.body.email = req.body.email.trim().toLowerCase().replace(/\s/g, '');
 
     if (typeof req.body?.full_name === "string")
         req.body.full_name = req.body.full_name.trim();
@@ -20,8 +20,9 @@ function normalizeRegisterInput(req, res, next) {
 }
 
 function normalizeLoginInput(req, res, next) {
-    if (typeof req.body?.email === "string")
-        req.body.email = req.body.email.trim().toLowerCase();
+    if (typeof req.body?.email === "string") {
+        req.body.email = req.body.email.trim().toLowerCase().replace(/\s/g, '');
+    }
 
     if (typeof req.body?.password === "string")
         req.body.password = req.body.password;
