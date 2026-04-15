@@ -35,6 +35,12 @@ async function register(payload) {
     try {
         await connection.beginTransaction();
 
+        // Get the ORGANIZER role ID from database
+        const organizerRole = await authModel.findRoleByCode(connection, "ORGANIZER");
+        if (!organizerRole) {
+            throw new AppError("ORGANIZER role not found in database", 500, "ROLE_NOT_FOUND");
+        }
+
         await authModel.createUser(connection, {
             id: userId,
             email,
@@ -47,7 +53,7 @@ async function register(payload) {
         await authModel.createUserRole(connection, {
             id: userRoleId,
             userId,
-            roleCode: "ORGANIZER"
+            roleId: organizerRole.id
         });
 
         await connection.commit();
