@@ -51,6 +51,7 @@ app.get("/test", (req, res) => {
     `);
 });
 
+app.use("/uploads", express.static("uploads"));
 app.use("/", routes);
 app.use(errorMiddleware);
 
