@@ -1,5 +1,7 @@
 const e = require('express');
 const userServices = require('./userServices');
+const path = require('path');
+const fs = require('fs');
 
 const getUser = async (req, res) => {
     try {
@@ -47,20 +49,45 @@ const updateUser = async (req, res) => {
 const updateAvatar = async (req, res) => {
     try {
         const userId = req.user.id;
-        if(!req.file) {
+
+        if (!req.file) {
             return res.status(400).json({
                 success: false,
                 message: "No file uploaded"
             });
         }
 
-        const avatarUrl = `/uploads/avatars/${req.file.filename}`;
-        const user = await userServices.updateAvatar(userId, { avatar_url: avatarUrl });
+        const user = await userServices.getUser(userId);
+        const oldAvatar = user.avatar_url;
+
+        const newAvatarUrl = `/uploads/avatars/${req.file.filename}`;
+
+        if (oldAvatar) {
+            const cleanPath = oldAvatar.replace(/^\//, "");
+
+            const oldAvatarPath = path.join(
+                process.cwd(),
+                "src",
+                cleanPath
+            );
+
+            fs.unlink(oldAvatarPath, (err) => {
+                if (err) {
+                    console.log("Delete failed:", err.message);
+                } else {
+                    console.log("Deleted old avatar:", oldAvatarPath);
+                }
+            });
+        }
+
+        const updatedUser = await userServices.updateAvatar(userId, newAvatarUrl);
+
         res.json({
             success: true,
             message: "Avatar updated successfully",
-            data: user
+            data: updatedUser
         });
+
     } catch (error) {
         res.status(500).json({
             success: false,
