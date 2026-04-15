@@ -113,7 +113,10 @@ async function getAllTeams() {
     `
   );
 
-  return rows;
+  return rows.map((team) => ({
+    ...team,
+    kit_url: team.kit_url ? JSON.parse(team.kit_url) : []
+  }));
 }
 
 async function getTeamById(teamId) {
@@ -136,7 +139,14 @@ async function getTeamById(teamId) {
     [teamId]
   );
 
-  return rows[0] || null;
+  const team = rows[0] || null;
+
+  if (!team) return null;
+
+  return {
+    ...team,
+    kit_url: team.kit_url ? JSON.parse(team.kit_url) : []
+  };
 }
 
 async function updateTeam(teamId, payload) {
