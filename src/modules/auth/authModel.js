@@ -31,30 +31,44 @@ async function createUserRole(executor, payload) {
     const {
         id,
         userId,
-        roleCode
+        roleId
     } = payload;
 
     await executor.execute(
-        `INSERT INTO user_roles (id, user_id, role_code)
+        `INSERT INTO user_roles (id, user_id, role_id)
          VALUES (?, ?, ?)`,
-        [id, userId, roleCode]
+        [id, userId, roleId]
     );
+}
+
+async function findRoleByCode(executor, code) {
+    const [rows] = await executor.execute(
+        `SELECT id, code, name
+         FROM roles
+         WHERE code = ?
+         LIMIT 1`,
+        [code]
+    );
+
+    return rows[0] || null;
 }
 
 async function findRolesByUserId(executor, userId) {
     const [rows] = await executor.execute(
-        `SELECT role_code
-         FROM user_roles
-         WHERE user_id = ?`,
+        `SELECT r.code
+         FROM user_roles ur
+         JOIN roles r ON ur.role_id = r.id
+         WHERE ur.user_id = ?`,
         [userId]
     );
 
-    return rows.map((row) => row.role_code);
+    return rows.map((row) => row.code);
 }
 
 module.exports = {
     findUserByEmail,
     createUser,
     createUserRole,
+    findRoleByCode,
     findRolesByUserId
 };
