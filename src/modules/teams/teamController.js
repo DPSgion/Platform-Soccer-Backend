@@ -16,14 +16,14 @@ const createTeam = async (req, res, next) => {
       return next(new AppError("Name is required", 400, "VALIDATION_ERROR"));
     }
 
-    const team = await teamService.createTeam({
-      name: name.trim(),
-      country,
-      description,
-      logo_url,
-      kit_url,
-      manager_id: req.user.id
-    });
+  const team = await teamService.createTeam({
+    name: name.trim(),
+    country,
+    description,
+    logo_url,
+    kit_url: JSON.stringify(Array.isArray(kit_url) ? kit_url : []),
+    manager_id: req.user.id
+  });
 
     return res.status(201).json({
       success: true,
@@ -91,7 +91,7 @@ const updateTeam = async (req, res, next) => {
       country,
       description,
       logo_url,
-      kit_url,
+      kit_url: JSON.stringify(Array.isArray(kit_url) ? kit_url : []),
       manager_id: req.user.id
     });
 
