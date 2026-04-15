@@ -1,7 +1,7 @@
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
-const avatarsDir = path.join(__dirname, "../src/uploads/avatars");
+const avatarsDir = path.join(__dirname, "../../uploads/avatars");
 
 if (!fs.existsSync(avatarsDir)) {
     fs.mkdirSync(avatarsDir, { recursive: true });
