@@ -38,7 +38,7 @@ const updateAvatar = async (userId, data) => {
 
     await db.execute(
         `UPDATE users 
-        SET avatar_url = COALESCE(?, avatar_url), updated_at = NOW() 
+        SET avatar_url = ?, updated_at = NOW() 
         WHERE id = ?`, 
         [avatar_url, userId]
     );
