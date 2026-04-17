@@ -1,13 +1,16 @@
 const os = require("oci-objectstorage");
 const common = require("oci-common");
-const path = require("path");
 
-const configurationFilePath = path.join(process.cwd(), "src", "config", "oci", "config");
-console.log("Đang tải OCI Config từ:", configurationFilePath);
+const rawPrivateKey = process.env.OCI_PRIVATE_KEY || "";
+const formattedPrivateKey = rawPrivateKey.replace(/\\n/g, '\n');
 
-const provider = new common.ConfigFileAuthenticationDetailsProvider(
-    configurationFilePath,
-    "DEFAULT"
+const provider = new common.SimpleAuthenticationDetailsProvider(
+    process.env.OCI_TENANCY,
+    process.env.OCI_USER,
+    process.env.OCI_FINGERPRINT,
+    formattedPrivateKey,
+    null, // Passphrase của private key
+    common.Region.fromRegionId(process.env.OCI_REGION || 'ap-singapore-1')
 );
 
 const client = new os.ObjectStorageClient({ authenticationDetailsProvider: provider });
@@ -15,7 +18,7 @@ const client = new os.ObjectStorageClient({ authenticationDetailsProvider: provi
 const uploadFileToOCI = async (file) => {
     const namespace = 'axqv9e1of21u';
     const bucket = 'soccer_storage';
-    const region = 'ap-singapore-1'; // Dùng chung cho toàn bộ hàm
+    const region = process.env.OCI_REGION || 'ap-singapore-1'; 
     const objectName = `avatars/${Date.now()}-${file.originalname}`;
 
     const putObjectRequest = {
@@ -29,10 +32,8 @@ const uploadFileToOCI = async (file) => {
     try {
         await client.putObject(putObjectRequest);
 
-        // Trả về link URL đúng chuẩn Oracle
         return `https://objectstorage.${region}.oraclecloud.com/n/${namespace}/b/${bucket}/o/${encodeURIComponent(objectName)}`;
     } catch (error) {
-        // In lỗi chi tiết ra Terminal để mình còn biết mà fix nếu tịt
         console.error("Lỗi Oracle Cloud chi tiết:", error);
         throw new Error("Không thể upload ảnh lên Cloud");
     }
