@@ -177,16 +177,55 @@ async function updateTeam(teamId, payload) {
   return result.affectedRows;
 }
 
-async function deleteTeam(teamId, manager_id) {
+async function deleteTeam(teamId, managerId) {
+  // Kiểm tra team tồn tại
+  const team = await getTeamById(teamId);
+  if (!team) return null;
+
+  // Kiểm tra ràng buộc 1: Giải đấu hiện tại
+  const activeTournaments = await getTeamTournaments(teamId);
+  if (activeTournaments.length > 0) {
+    const error = new Error("Team is participating in active tournament(s)");
+    error.code = "TEAM_IN_ACTIVE_TOURNAMENT";
+    error.tournaments = activeTournaments;
+    throw error;
+  }
+
+  // Kiểm tra ràng buộc 2: Còn thành viên
+  const memberCount = await getTeamMembersFromDB(teamId);
+  if (memberCount > 0) {
+    const error = new Error(`Team still has ${memberCount} member(s)`);
+    error.code = "TEAM_HAS_MEMBERS";
+    throw error;
+  }
+
+  // Thực hiện xóa
   const [result] = await pool.execute(
-    `
-    DELETE FROM teams
-    WHERE id=? AND manager_id=?
-    `,
-    [teamId, manager_id]
+    "DELETE FROM teams WHERE id = ? AND manager_id = ?",
+    [teamId, managerId]
   );
 
   return result.affectedRows;
+}
+
+// Kiểm tra team có đang trong giải đấu không
+async function getTeamTournaments(teamId) {
+  const [rows] = await pool.execute(`
+    SELECT t.id, t.name, t.status
+    FROM tournaments t
+    JOIN tournament_teams tt ON t.id = tt.tournament_id
+    WHERE tt.team_id = ? AND t.status IN ('UPCOMING', 'ONGOING')
+  `, [teamId]);
+  return rows;
+}
+
+// Kiểm tra team còn thành viên không
+async function getTeamMembersFromDB(teamId) {
+  const [rows] = await pool.execute(
+    "SELECT COUNT(*) as count FROM team_members WHERE team_id = ?",
+    [teamId]
+  );
+  return rows[0].count;
 }
 
 // ===== TEAM MEMBERS =====
