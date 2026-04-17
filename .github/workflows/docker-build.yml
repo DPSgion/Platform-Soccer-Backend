@@ -89,6 +89,11 @@ jobs:
               -e DB_PORT=$DB_PORT \
               -e DB_NAME=$DB_NAME \
               -e JWT_SECRET="$JWT_SECRET" \
+              -e OCI_TENANCY="$OCI_TENANCY" \
+              -e OCI_USER="$OCI_USER" \
+              -e OCI_FINGERPRINT="$OCI_FINGERPRINT" \
+              -e OCI_PRIVATE_KEY="$OCI_PRIVATE_KEY" \
+              -e OCI_REGION="$OCI_REGION" \
               --log-opt max-size=10m \
               --log-opt max-file=3 \
               ghcr.io/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
