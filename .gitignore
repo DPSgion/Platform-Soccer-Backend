@@ -1,5 +1,33 @@
-node_modules
+# dependencies
+node_modules/
+
+# env
 .env
-dist
-build
-npm-debug.log
+.env.*
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# build
+dist/
+build/
+
+# uploads
+uploads/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# vscode
+.vscode/
+
+# keys / config nhạy cảm
+src/config/oci/config
+*.pem
+*.key
+
+# local config
+config/local*

@@ -1,35 +1,189 @@
 const teamService = require("./teamService");
+const { AppError } = require("../../middlewares/errorMiddleware");
 
-const getAllTeams = (req, res) => {
-  const teams = teamService.getAllTeams();
+// CREATE
+const createTeam = async (req, res, next) => {
+  try {
+    const {
+      name,
+      country = "",
+      description = "",
+      logo_url = "",
+      kit_url = ""
+    } = req.body;
 
-  return res.status(200).json({
-    success: true,
-    message: "Get teams successfully",
-    data: teams
+    if (!name || !name.trim()) {
+      return next(new AppError("Name is required", 400, "VALIDATION_ERROR"));
+    }
+
+  const team = await teamService.createTeam({
+    name: name.trim(),
+    country,
+    description,
+    logo_url,
+    kit_url: JSON.stringify(Array.isArray(kit_url) ? kit_url : []),
+    manager_id: req.user.id
   });
+
+    return res.status(201).json({
+      success: true,
+      message: "Create team successfully",
+      data: team
+    });
+  } catch (error) {
+    return next(error);
+  }
 };
 
-const getTeamById = (req, res) => {
-  const { teamId } = req.params;
-  const team = teamService.getTeamById(teamId);
+// GET ALL
+const getAllTeams = async (req, res, next) => {
+  try {
+    const teams = await teamService.getAllTeams();
 
-  if (!team) {
+    return res.status(200).json({
+      success: true,
+      message: "Get teams successfully",
+      data: teams
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// GET ONE
+const getTeamById = async (req, res, next) => {
+  try {
+    const { teamId } = req.params;
+    const team = await teamService.getTeamById(teamId);
+
+    if (!team) {
+      return next(new AppError("Team not found", 404, "TEAM_NOT_FOUND"));
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Get team successfully",
+      data: team
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// UPDATE
+const updateTeam = async (req, res, next) => {
+  try {
+    const { teamId } = req.params;
+    const {
+      name,
+      country = "",
+      description = "",
+      logo_url = "",
+      kit_url = ""
+    } = req.body;
+
+    if (!name || !name.trim()) {
+      return next(new AppError("Name is required", 400, "VALIDATION_ERROR"));
+    }
+
+    const affectedRows = await teamService.updateTeam(teamId, {
+      name: name.trim(),
+      country,
+      description,
+      logo_url,
+      kit_url: JSON.stringify(Array.isArray(kit_url) ? kit_url : []),
+      manager_id: req.user.id
+    });
+
+    if (!affectedRows) {
+      return next(
+        new AppError(
+          "Team not found or you are not the manager",
+          404,
+          "TEAM_NOT_FOUND_OR_FORBIDDEN"
+        )
+      );
+    }
+
+    const updatedTeam = await teamService.getTeamById(teamId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Update team successfully",
+      data: updatedTeam
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// DELETE
+const deleteTeam = async (req, res, next) => {
+  try {
+    const { teamId } = req.params;
+
+    const affectedRows = await teamService.deleteTeam(teamId, req.user.id);
+
+    if (!affectedRows) {
+      return next(
+        new AppError(
+          "Team not found or you are not the manager",
+          404,
+          "TEAM_NOT_FOUND_OR_FORBIDDEN"
+        )
+      );
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Delete team successfully"
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+//MEMBERS
+const getTeamMembers = (req, res) => {
+  const { teamId } = req.params;
+  const members = teamService.getTeamMembers(teamId); 
+  if (members.length === 0) {
     return res.status(404).json({
       success: false,
-      message: "Team not found",
+      message: "No members found for this team",
       data: null
     });
   }
-
   return res.status(200).json({
     success: true,
-    message: "Get team successfully",
-    data: team
+    message: "Get team members successfully",
+    data: members
+  });
+}
+
+const getTeamMemberById = (req, res) => {
+  const { teamId, playerId } = req.params;
+  const member = teamService.getTeamMemberById(teamId, playerId);
+  if (!member) {
+    return res.status(404).json({
+      success: false,
+      message: "Team member not found",
+      data: null
+    });
+  } return res.status(200).json({
+    success: true,
+    message: "Get team member successfully",    
+    data: member
   });
 };
 
+
 module.exports = {
+  createTeam,
   getAllTeams,
-  getTeamById
+  getTeamById,
+  updateTeam,
+  deleteTeam,
+  getTeamMembers,
+  getTeamMemberById
 };
