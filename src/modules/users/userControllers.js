@@ -1,48 +1,31 @@
-const e = require('express');
 const userServices = require('./userServices');
-const path = require('path');
-const fs = require('fs');
+const { uploadFileToOCI } = require('../../utils/ociUpload');
 
 const getUser = async (req, res) => {
     try {
         if (!req.user || !req.user.id) {
-            return res.status(401).json({
-                message: "Unauthorized"
-            });
+            return res.status(401).json({ message: "Unauthorized" });
         }
-        const userId = req.user.id
+        const userId = req.user.id;
         const user = await userServices.getUser(userId);
 
-        res.json({
-            success: true,
-            data: user
-        });
+        res.json({ success: true, data: user });
     } catch (error) {
-        res.status(404).json({
-            message: error.message
-        });
+        res.status(404).json({ message: error.message });
     }
 };
 
 const updateUser = async (req, res) => {
     try {
         if (!req.user || !req.user.id) {
-            return res.status(401).json({
-                message: "Unauthorized"
-            });
+            return res.status(401).json({ message: "Unauthorized" });
         }
-
         const userId = req.user.id;
         const user = await userServices.updateUser(userId, req.body);
 
-        res.json({
-            message: "User updated successfully",
-            data: user
-        });
+        res.json({ message: "User updated successfully", data: user });
     } catch (error) {
-        res.status(404).json({
-            message: error.message
-        });
+        res.status(404).json({ message: error.message });
     }
 };
 
@@ -57,34 +40,15 @@ const updateAvatar = async (req, res) => {
             });
         }
 
-        const user = await userServices.getUser(userId);
-        const oldAvatar = user.avatar_url;
+        // 1. Đẩy ảnh trực tiếp lên Oracle Cloud
+        const newAvatarUrl = await uploadFileToOCI(req.file);
 
-        const newAvatarUrl = `/uploads/avatars/${req.file.filename}`;
-
-        if (oldAvatar) {
-            const cleanPath = oldAvatar.replace(/^\//, "");
-
-            const oldAvatarPath = path.join(
-                process.cwd(),
-                "src",
-                cleanPath
-            );
-
-            fs.unlink(oldAvatarPath, (err) => {
-                if (err) {
-                    console.log("Delete failed:", err.message);
-                } else {
-                    console.log("Deleted old avatar:", oldAvatarPath);
-                }
-            });
-        }
-
+        // 2. Cập nhật link URL từ Cloud vào Database
         const updatedUser = await userServices.updateAvatar(userId, newAvatarUrl);
 
         res.json({
             success: true,
-            message: "Avatar updated successfully",
+            message: "Avatar updated successfully to Oracle Cloud",
             data: updatedUser
         });
 
