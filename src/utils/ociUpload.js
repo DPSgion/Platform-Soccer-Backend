@@ -1,8 +1,8 @@
 const os = require("oci-objectstorage");
 const common = require("oci-common");
 
-const rawPrivateKey = process.env.OCI_PRIVATE_KEY || "";
-const formattedPrivateKey = rawPrivateKey.replace(/\\n/g, '\n');
+const rawBase64Key = process.env.OCI_PRIVATE_KEY || "";
+const formattedPrivateKey = Buffer.from(rawBase64Key, 'base64').toString('utf-8');
 
 const provider = new common.SimpleAuthenticationDetailsProvider(
     process.env.OCI_TENANCY,
