@@ -25,6 +25,7 @@ Thumbs.db
 .vscode/
 
 # keys / config nhạy cảm
+src/config/oci/config
 *.pem
 *.key
 
