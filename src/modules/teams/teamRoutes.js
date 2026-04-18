@@ -9,7 +9,7 @@ const { authMiddleware } = require("../../middlewares/authMiddleware");
 router.post("/", authMiddleware(["ORGANIZER"]), upload.any(), teamController.createTeam);
 router.get("/", authMiddleware(["ORGANIZER"]), teamController.getAllTeams);
 router.get("/:teamId", teamController.getTeamById);
-router.put("/:teamId", authMiddleware(["ORGANIZER"]), upload.fields([{name: 'logo', maxCount: 1}, {name: 'kit', maxCount: 5}]), teamController.updateTeam);
+router.put("/:teamId", authMiddleware(["ORGANIZER"]), upload.any(), teamController.updateTeam);
 router.delete("/:teamId", authMiddleware(["ORGANIZER"]), teamController.deleteTeam);
 
 //TEAM MEMBERS
