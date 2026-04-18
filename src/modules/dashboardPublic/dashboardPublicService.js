@@ -112,7 +112,7 @@ exports.getTournamentMatches = async (tournamentId) => {
     matches: tournamentMatches,
   };
 };
-
+// Tìm kiếm và xem danh sách đội bóng theo tên
 exports.getTeams = async (keyword) => {
   let sql = `
     SELECT 
@@ -135,6 +135,30 @@ exports.getTeams = async (keyword) => {
   sql += ` ORDER BY created_at DESC`;
 
   const [rows] = await db.query(sql, params);
+
+  return rows;
+};
+//Xem danh sách thành viên trong đội bóng
+exports.getTeamMembers = async (teamId) => {
+  const sql = `
+    SELECT
+      id,
+      team_id,
+      full_name,
+      image_url,
+      age,
+      height_cm,
+      weight_kg,
+      preferred_foot,
+      main_position,
+      jersey_number,
+      joined_at
+    FROM team_members
+    WHERE team_id = ?
+    ORDER BY jersey_number ASC
+  `;
+
+  const [rows] = await db.query(sql, [teamId]);
 
   return rows;
 };

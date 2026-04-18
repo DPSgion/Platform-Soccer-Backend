@@ -67,8 +67,42 @@ const getTeams = async (req, res) => {
     });
   }
 };
+const getTeamMembers = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+
+    if (!teamId) {
+      throw new AppError("Team id is required", 400, "VALIDATION_ERROR");
+    }
+
+    const members = await dashboardPublicService.getTeamMembers(teamId);
+
+    if (!members.length) {
+      return res.status(404).json({
+        success: false,
+        code: "TEAM_MEMBERS_NOT_FOUND",
+        message: "No members found for this team",
+        data: null,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Get team members successfully",
+      data: members,
+    });
+  } catch (err) {
+    return res.status(err.statusCode || 500).json({
+      success: false,
+      code: err.code || "INTERNAL_ERROR",
+      message: err.message || "Internal Server Error",
+      data: null,
+    });
+  }
+};
 module.exports = {
   getTournaments,
   getTournamentMatches,
   getTeams,
+  getTeamMembers,
 };

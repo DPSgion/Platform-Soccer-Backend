@@ -5,4 +5,5 @@ const controller = require("./dashboardPublicController");
 router.get("/tournament", controller.getTournaments);
 router.get("/tournament/:id/match", controller.getTournamentMatches);
 router.get("/teams", controller.getTeams);
+router.get("/teams/:teamId/members", controller.getTeamMembers);
 module.exports = router;
