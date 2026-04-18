@@ -5,32 +5,42 @@ const { uploadFileToOCI } = require('../../utils/ociUpload');
 // CREATE
 const createTeam = async (req, res, next) => {
   try {
-    const {
-      name,
-      country = "",
-      description = "",
-      logo_url = "",
-      kit_url = ""
-    } = req.body;
+    const { name, country = "", description = "" } = req.body;
+    const files = req.files || [];
 
-    if (!name || !name.trim()) {
-      return next(new AppError("Name is required", 400, "VALIDATION_ERROR"));
+    let logo_url = "";
+    let kit_url = [];
+
+    // Upload logo - tìm theo fieldname
+    const logoFile = files.find(f => f.fieldname === 'logo');
+    if (logoFile) {
+      logo_url = await uploadFileToOCI(logoFile);
     }
 
-  const team = await teamService.createTeam({
-    name: name.trim(),
-    country,
-    description,
-    logo_url,
-    kit_url: JSON.stringify(Array.isArray(kit_url) ? kit_url : []),
-    manager_id: req.user.id
-  });
+    // Upload kit - tìm tất cả files có fieldname 'kit'
+    const kitFiles = files.filter(f => f.fieldname === 'kit');
+    if (kitFiles.length > 0) {
+      kit_url = await Promise.all(kitFiles.map(f => uploadFileToOCI(f)));
+    }
 
-    return res.status(201).json({
-      success: true,
-      message: "Create team successfully",
-      data: team
+    // Nếu có URL trong body mà không upload file
+    if (req.body.logo_url && !logo_url) {
+      logo_url = req.body.logo_url;
+    }
+    if (req.body.kit_url) {
+      kit_url = Array.isArray(req.body.kit_url) ? req.body.kit_url : JSON.parse(req.body.kit_url);
+    }
+
+    const team = await teamService.createTeam({
+      name: name.trim(),
+      country,
+      description,
+      logo_url,
+      kit_url: JSON.stringify(kit_url),
+      manager_id: req.user.id
     });
+
+    return res.status(201).json({ success: true, message: "Create team successfully", data: team });
   } catch (error) {
     return next(error);
   }
@@ -66,16 +76,24 @@ const getTeamById = async (req, res, next) => {
 const updateTeam = async (req, res, next) => {
   try {
     const { teamId } = req.params;
-    const {
-      name,
-      country = "",
-      description = "",
-      logo_url = "",
-      kit_url = ""
-    } = req.body;
+    const { name, country = "", description = "" } = req.body;
+    const files = req.files || [];
 
-    if (!name || !name.trim()) {
-      return next(new AppError("Name is required", 400, "VALIDATION_ERROR"));
+    let logo_url = req.body.logo_url || "";
+    let parsedKitUrl = req.body.kit_url ? JSON.parse(req.body.kit_url) : [];
+
+    // Upload logo - tìm theo fieldname
+    const logoFile = files.find(f => f.fieldname === 'logo');
+    if (logoFile) {
+      logo_url = await uploadFileToOCI(logoFile);
+    }
+
+    // Upload kit - tìm theo fieldname
+    let finalKitUrl = parsedKitUrl;
+    const kitFiles = files.filter(f => f.fieldname === 'kit');
+    if (kitFiles.length > 0) {
+      const newKitUrls = await Promise.all(kitFiles.map(f => uploadFileToOCI(f)));
+      finalKitUrl = [...parsedKitUrl, ...newKitUrls];
     }
 
     const affectedRows = await teamService.updateTeam(teamId, {
@@ -83,27 +101,16 @@ const updateTeam = async (req, res, next) => {
       country,
       description,
       logo_url,
-      kit_url: JSON.stringify(Array.isArray(kit_url) ? kit_url : []),
+      kit_url: JSON.stringify(finalKitUrl),
       manager_id: req.user.id
     });
 
     if (!affectedRows) {
-      return next(
-        new AppError(
-          "Team not found or you are not the manager",
-          404,
-          "TEAM_NOT_FOUND_OR_FORBIDDEN"
-        )
-      );
+      return next(new AppError("Team not found or you are not the manager", 404, "TEAM_NOT_FOUND_OR_FORBIDDEN"));
     }
 
     const updatedTeam = await teamService.getTeamById(teamId);
-
-    return res.status(200).json({
-      success: true,
-      message: "Update team successfully",
-      data: updatedTeam
-    });
+    return res.status(200).json({ success: true, message: "Update team successfully", data: updatedTeam });
   } catch (error) {
     return next(error);
   }
