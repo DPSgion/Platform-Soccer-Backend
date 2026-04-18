@@ -30,8 +30,8 @@ const matches = [
   {
     id: "m1",
     tournament_id: "1",
-    home_team: "Lions FC",
-    away_team: "Tigers FC",
+    home_team_id: "team_1",
+    away_team_id: "team_2",
     home_score: 2,
     away_score: 1,
     stadium: "National Stadium",
@@ -40,8 +40,8 @@ const matches = [
   {
     id: "m2",
     tournament_id: "1",
-    home_team: "Eagles FC",
-    away_team: "Lions FC",
+    home_team_id: "team_3",
+    away_team_id: "team_1",
     home_score: 0,
     away_score: 3,
     stadium: "Jalan Besar Stadium",
@@ -50,15 +50,38 @@ const matches = [
   {
     id: "m3",
     tournament_id: "2",
-    home_team: "Dragon FC",
-    away_team: "Phoenix FC",
+    home_team_id: "team_4",
+    away_team_id: "team_5",
     home_score: 1,
     away_score: 1,
     stadium: "Sport Hub",
     start_time: "2026-08-12 19:30:00",
   },
 ];
-// Danh sách giải đấu 
+const teams = {
+  team_1: {
+    name: "Lions FC",
+    logo: "https://picsum.photos/50/50?1",
+  },
+  team_2: {
+    name: "Tigers FC",
+    logo: "https://picsum.photos/50/50?2",
+  },
+  team_3: {
+    name: "Eagles FC",
+    logo: "https://picsum.photos/50/50?3",
+  },
+  team_4: {
+    name: "Dragon FC",
+    logo: "https://picsum.photos/50/50?4",
+  },
+  team_5: {
+    name: "Phoenix FC",
+    logo: "https://picsum.photos/50/50?5",
+  },
+};
+const db=require("../../dbConfig");
+// Danh sách giải đấu
 exports.getTournaments = async () => {
   return tournaments;
 };
@@ -70,9 +93,21 @@ exports.getTournamentMatches = async (tournamentId) => {
     throw new Error("Tournament not found");
   }
 
-  const tournamentMatches = matches.filter(
-    (m) => m.tournament_id === tournamentId,
-  );
+  const tournamentMatches = matches
+    .filter((m) => m.tournament_id === tournamentId)
+    .map((m) => ({
+      ...m,
+      home_team: {
+        id: m.home_team_id,
+        name: teams[m.home_team_id].name,
+        logo: teams[m.home_team_id].logo,
+      },
+      away_team: {
+        id: m.away_team_id,
+        name: teams[m.away_team_id].name,
+        logo: teams[m.away_team_id].logo,
+      },
+    }));
 
   return {
     tournament,
@@ -91,7 +126,7 @@ function safeParseArrayJson(value) {
   }
 }
 
-exports.getPublicTeams = async (query) => {
+exports.getTeams = async (query) => {
   const keyword = (query.name || "").trim();
   const country = (query.country || "").trim();
 
@@ -139,4 +174,28 @@ exports.getPublicTeams = async (query) => {
     ...team,
     kit_url: safeParseArrayJson(team.kit_url),
   }));
+};
+//Xem danh sách thành viên trong đội bóng
+exports.getTeamMembers = async (teamId) => {
+  const sql = `
+    SELECT
+      id,
+      team_id,
+      full_name,
+      image_url,
+      age,
+      height_cm,
+      weight_kg,
+      preferred_foot,
+      main_position,
+      jersey_number,
+      joined_at
+    FROM team_members
+    WHERE team_id = ?
+    ORDER BY jersey_number ASC
+  `;
+
+  const [rows] = await db.query(sql, [teamId]);
+
+  return rows;
 };
