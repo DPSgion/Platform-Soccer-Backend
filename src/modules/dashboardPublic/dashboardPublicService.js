@@ -78,6 +78,7 @@ const teams = {
     logo: "https://picsum.photos/50/50?5",
   },
 };
+const db=require("../../dbConfig");
 // Danh sách giải đấu
 exports.getTournaments = async () => {
   return tournaments;
@@ -110,4 +111,30 @@ exports.getTournamentMatches = async (tournamentId) => {
     tournament,
     matches: tournamentMatches,
   };
+};
+
+exports.getTeams = async (keyword) => {
+  let sql = `
+    SELECT 
+      id,
+      name,
+      country,
+      logo_url,
+      description
+    FROM teams
+  `;
+
+  const params = [];
+
+  // search theo tên
+  if (keyword) {
+    sql += ` WHERE name LIKE ?`;
+    params.push(`%${keyword}%`);
+  }
+
+  sql += ` ORDER BY created_at DESC`;
+
+  const [rows] = await db.query(sql, params);
+
+  return rows;
 };
