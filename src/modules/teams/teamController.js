@@ -121,24 +121,36 @@ const updateTeam = async (req, res, next) => {
 const deleteTeam = async (req, res, next) => {
   try {
     const { teamId } = req.params;
-
     const affectedRows = await teamService.deleteTeam(teamId, req.user.id);
 
     if (!affectedRows) {
-      return next(
-        new AppError(
-          "Team not found or you are not the manager",
-          404,
-          "TEAM_NOT_FOUND_OR_FORBIDDEN"
-        )
-      );
+      return next(new AppError(
+        "Team not found or you are not the manager",
+        404,
+        "TEAM_NOT_FOUND_OR_FORBIDDEN"
+      ));
     }
 
     return res.status(200).json({
       success: true,
-      message: "Delete team successfully"
+      message: "Team deleted successfully"
     });
   } catch (error) {
+    if (error.code === "TEAM_IN_ACTIVE_TOURNAMENT") {
+      return res.status(409).json({
+        success: false,
+        code: "TEAM_IN_ACTIVE_TOURNAMENT",
+        message: error.message,
+        data: { tournaments: error.tournaments }
+      });
+    }
+    if (error.code === "TEAM_HAS_MEMBERS") {
+      return res.status(409).json({
+        success: false,
+        code: "TEAM_HAS_MEMBERS",
+        message: error.message
+      });
+    }
     return next(error);
   }
 };
