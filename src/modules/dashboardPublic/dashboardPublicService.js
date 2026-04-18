@@ -1,3 +1,5 @@
+const pool = require("../../dbConfig");
+
 const tournaments = [
   {
     id: "1",
@@ -112,31 +114,66 @@ exports.getTournamentMatches = async (tournamentId) => {
     matches: tournamentMatches,
   };
 };
-// Tìm kiếm và xem danh sách đội bóng theo tên
-exports.getTeams = async (keyword) => {
-  let sql = `
-    SELECT 
-      id,
-      name,
-      country,
-      logo_url,
-      description
-    FROM teams
-  `;
 
-  const params = [];
+function safeParseArrayJson(value) {
+  if (!value) return [];
 
-  // search theo tên
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_error) {
+    return [];
+  }
+}
+
+exports.getTeams = async (query) => {
+  const keyword = (query.name || "").trim();
+  const country = (query.country || "").trim();
+
+  const whereClauses = [];
+  const whereParams = [];
+
   if (keyword) {
-    sql += ` WHERE name LIKE ?`;
-    params.push(`%${keyword}%`);
+    whereClauses.push("(t.name LIKE ? OR t.country LIKE ?)");
+    whereParams.push(`%${keyword}%`, `%${keyword}%`);
   }
 
-  sql += ` ORDER BY created_at DESC`;
+  if (country) {
+    whereClauses.push("t.country LIKE ?");
+    whereParams.push(`%${country}%`);
+  }
 
-  const [rows] = await db.query(sql, params);
+  const whereSql = whereClauses.length ? `WHERE ${whereClauses.join(" AND ")}` : "";
 
-  return rows;
+  const [rows] = await pool.execute(
+    `
+    SELECT
+      t.id,
+      t.name,
+      t.country,
+      t.description,
+      t.logo_url,
+      t.kit_url,
+      t.manager_id,
+      t.created_at,
+      t.updated_at,
+      COALESCE(mc.total_players, 0) AS total_players
+    FROM teams t
+    LEFT JOIN (
+      SELECT team_id, COUNT(*) AS total_players
+      FROM team_members
+      GROUP BY team_id
+    ) mc ON mc.team_id = t.id
+    ${whereSql}
+    ORDER BY t.created_at DESC
+    `,
+    whereParams,
+  );
+
+  return rows.map((team) => ({
+    ...team,
+    kit_url: safeParseArrayJson(team.kit_url),
+  }));
 };
 //Xem danh sách thành viên trong đội bóng
 exports.getTeamMembers = async (teamId) => {
