@@ -81,7 +81,7 @@ exports.getTournamentMatches = async (tournamentId) => {
 };
 
 
-const getTeamMember = async (teamId, playerId) => {
+const getTeamMemberDetail = async (teamId, playerId) => {
     const [rows] = await db.execute(
       `SELECT id, team_id, full_name, image_url, age, height_cm, weight_kg, preferred_foot, main_position, jersey_number, joined_at
       FROM team_members tm
@@ -97,5 +97,5 @@ const getTeamMember = async (teamId, playerId) => {
 };
 
 module.exports = {
-  getTeamMember
+  getTeamMemberDetail
 };

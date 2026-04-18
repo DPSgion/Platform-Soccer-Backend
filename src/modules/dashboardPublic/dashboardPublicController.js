@@ -25,10 +25,10 @@ exports.getTournamentMatches = async (req, res) => {
   }
 }; */
 
-const getTeamMember = async (req, res) => {
+const getTeamMemberDetail = async (req, res) => {
   try {
     const {teamId, playerId} = req.params;
-    const member = await dashboardPublicService.getTeamMember(teamId, playerId);
+    const member = await dashboardPublicService.getTeamMemberDetail(teamId, playerId);
 
     if (!member) {
       return res.status(404).json({ 
@@ -50,5 +50,5 @@ const getTeamMember = async (req, res) => {
 };
 
 module.exports = {
-  getTeamMember
+  getTeamMemberDetail
 };
