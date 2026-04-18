@@ -1,4 +1,4 @@
-const pool = require("../../dbConfig");
+const db = require("../../dbConfig");
 
 const tournaments = [
   {
@@ -80,13 +80,13 @@ const teams = {
     logo: "https://picsum.photos/50/50?5",
   },
 };
-const db=require("../../dbConfig");
+
 // Danh sách giải đấu
-exports.getTournaments = async () => {
+const getTournaments = async () => {
   return tournaments;
 };
 //Chi tiết giải đấu và các trận đấu liên quan
-exports.getTournamentMatches = async (tournamentId) => {
+const getTournamentMatches = async (tournamentId) => {
   const tournament = tournaments.find((t) => t.id === tournamentId);
 
   if (!tournament) {
@@ -115,6 +115,21 @@ exports.getTournamentMatches = async (tournamentId) => {
   };
 };
 
+const getTeamMemberDetail = async (teamId, playerId) => {
+    const [rows] = await db.execute(
+      `SELECT id, team_id, full_name, image_url, age, height_cm, weight_kg, preferred_foot, main_position, jersey_number, joined_at
+      FROM team_members tm
+      WHERE tm.team_id = ? AND tm.id = ?`,
+      [teamId, playerId]
+    );
+
+    if (rows.length === 0) {
+      throw new Error("Team member not found");
+    }
+
+    return rows[0];
+};
+
 function safeParseArrayJson(value) {
   if (!value) return [];
 
@@ -126,7 +141,7 @@ function safeParseArrayJson(value) {
   }
 }
 
-exports.getTeams = async (query) => {
+const getTeams = async (query) => {
   const keyword = (query.name || "").trim();
   const country = (query.country || "").trim();
 
@@ -145,7 +160,7 @@ exports.getTeams = async (query) => {
 
   const whereSql = whereClauses.length ? `WHERE ${whereClauses.join(" AND ")}` : "";
 
-  const [rows] = await pool.execute(
+  const [rows] = await db.execute(
     `
     SELECT
       t.id,
@@ -176,7 +191,7 @@ exports.getTeams = async (query) => {
   }));
 };
 //Xem danh sách thành viên trong đội bóng
-exports.getTeamMembers = async (teamId) => {
+const getTeamMembers = async (teamId) => {
   const sql = `
     SELECT
       id,
@@ -198,4 +213,12 @@ exports.getTeamMembers = async (teamId) => {
   const [rows] = await db.query(sql, [teamId]);
 
   return rows;
+};
+
+module.exports = {
+  getTournaments,
+  getTournamentMatches,
+  getTeams,
+  getTeamMembers,
+  getTeamMemberDetail
 };

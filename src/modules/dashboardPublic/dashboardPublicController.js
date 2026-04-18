@@ -58,6 +58,30 @@ const getTeams = async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
+}; 
+
+const getTeamMemberDetail = async (req, res) => {
+  try {
+    const {teamId, playerId} = req.params;
+    const member = await dashboardPublicService.getTeamMemberDetail(teamId, playerId);
+
+    if (!member) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Member not found"
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: member
+    });
+  } catch (err) {
+    res.status(500).json({ 
+      success: false, 
+      message: err.message 
+    });
+  }
 };
 
 const getTeamMembers = async (req, res) => {
@@ -98,4 +122,5 @@ module.exports = {
   getTournamentMatches,
   getTeams,
   getTeamMembers,
+  getTeamMemberDetail
 };
