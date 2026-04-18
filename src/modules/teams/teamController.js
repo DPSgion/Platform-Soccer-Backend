@@ -1,6 +1,6 @@
 const teamService = require("./teamService");
 const { AppError } = require("../../middlewares/errorMiddleware");
-const { uploadFileToOCI } = require('../../utils/ociUpload');
+//const { uploadFileToOCI } = require('../../utils/ociUpload');
 
 // CREATE
 const createTeam = async (req, res, next) => {
