@@ -172,23 +172,29 @@ const getTeamMembers = (req, res) => {
     data: members
   });
 }
+const getTeamMemberById = async (req, res, next) => {
+  try {
+    const { teamId, playerId } = req.params;
+    const member = await teamService.getTeamMemberById(teamId, playerId);
 
-const getTeamMemberById = (req, res) => {
-  const { teamId, playerId } = req.params;
-  const member = teamService.getTeamMemberById(teamId, playerId);
-  if (!member) {
-    return res.status(404).json({
-      success: false,
-      message: "Team member not found",
-      data: null
+    if (!member) {
+      return res.status(404).json({
+        success: false,
+        message: `Không tìm thấy cầu thủ với ID "${playerId}" trong đội "${teamId}"`,
+        data: null,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Get team member successfully",
+      data: member,
     });
-  } return res.status(200).json({
-    success: true,
-    message: "Get team member successfully",    
-    data: member
-  });
+  } catch (error) {
+    console.error("Error in getTeamMemberById:", error);
+    next(error);
+  }
 };
-
 
 module.exports = {
   createTeam,

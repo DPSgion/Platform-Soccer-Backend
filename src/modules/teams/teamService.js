@@ -231,10 +231,32 @@ async function getTeamMembersFromDB(teamId) {
 // ===== TEAM MEMBERS =====
 const getTeamMembers = (teamId) =>
   teamMembers.filter((member) => member.team_id === teamId);
-const getTeamMemberById = (teamId, playerId) =>
-  teamMembers.find(
-    (member) => member.team_id === teamId && member.id === playerId,
+const getTeamMemberById = async (teamId, playerId) => {
+  const [rows] = await pool.execute(
+    `
+    SELECT 
+      id,
+      team_id,
+      full_name,
+      image_url,
+      age,
+      height_cm,
+      weight_kg,
+      preferred_foot,
+      main_position,
+      jersey_number,
+      joined_at,
+      created_at,
+      updated_at
+    FROM team_members 
+    WHERE team_id = ? AND id = ?
+    LIMIT 1
+    `,
+    [teamId, playerId],
   );
+
+  return rows[0] || null;
+};
 
 module.exports = {
   createTeam,
