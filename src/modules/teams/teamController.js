@@ -1,6 +1,5 @@
 const teamService = require("./teamService");
 const { AppError } = require("../../middlewares/errorMiddleware");
-const { uploadFileToOCI } = require('../../utils/ociUpload');
 
 // CREATE
 const createTeam = async (req, res, next) => {
@@ -188,28 +187,6 @@ const getTeamMemberById = async (req, res, next) => {
   }
 };
 
-// uploadLogo
-const uploadLogo = async (req, res, next) => {
-  try {
-    const { teamId } = req.params;
-    const logoUrl = await uploadFileToOCI(req.file);
-    await teamService.updateTeam(teamId, { logo_url: logoUrl, manager_id: req.user.id });
-    return res.status(200).json({ success: true, message: "Logo uploaded", data: { logo_url: logoUrl } });
-  } catch (error) { return next(error); }
-};
-
-// uploadKit
-const uploadKit = async (req, res, next) => {
-  try {
-    const { teamId } = req.params;
-    const kitUrls = await Promise.all(req.files.map(f => uploadFileToOCI(f)));
-    const existingTeam = await teamService.getTeamById(teamId);
-    const existingKits = existingTeam.kit_url || [];
-    const newKits = [...existingKits, ...kitUrls];
-    await teamService.updateTeam(teamId, { kit_url: JSON.stringify(newKits), manager_id: req.user.id });
-    return res.status(200).json({ success: true, message: "Kit uploaded", data: { kit_url: newKits } });
-  } catch (error) { return next(error); }
-};
 
 module.exports = {
   createTeam,
@@ -218,5 +195,5 @@ module.exports = {
   updateTeam,
   deleteTeam,
   getTeamMembers,
-  getTeamMemberById
+  getTeamMemberById,
 };
