@@ -194,5 +194,5 @@ module.exports = {
   updateTeam,
   deleteTeam,
   getTeamMembers,
-  getTeamMemberById
+  getTeamMemberById,
 };
