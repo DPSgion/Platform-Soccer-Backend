@@ -228,6 +228,18 @@ async function getTeamMembersFromDB(teamId) {
   return rows[0].count;
 }
 
+async function getTeamsByManager(managerId) {
+  const [rows] = await pool.execute(
+    `SELECT id, name, country, description, logo_url, kit_url, manager_id
+     FROM teams WHERE manager_id = ? ORDER BY created_at DESC`,
+    [managerId]
+  );
+  return rows.map(team => ({
+    ...team,
+    kit_url: team.kit_url ? JSON.parse(team.kit_url) : []
+  }));
+}
+
 // ===== TEAM MEMBERS =====
 const getTeamMembers = (teamId) =>
   teamMembers.filter((member) => member.team_id === teamId);
