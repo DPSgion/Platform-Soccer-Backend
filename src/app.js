@@ -1,5 +1,4 @@
 const express = require("express");
-<<<<<<< HEAD
 const routes = require("./routes");
 const pool = require("./dbConfig");
 
@@ -28,15 +27,6 @@ app.get("/test-db", async (req, res) => {
         });
     }
 });
-=======
-
-const app = express();
-
-const routes = require("./routes");
-
-app.use(express.json());
-
->>>>>>> 1492c02556c6d8eebfa0c5af7462a34d78e1a425
 
 app.get("/", (req, res) => {
     res.json({
@@ -50,7 +40,6 @@ app.get("/health", (req, res) => {
     });
 });
 
-<<<<<<< HEAD
 app.get("/test", (req, res) => {
     res.send(`
         <h2>LOGIN TEST</h2>
@@ -67,8 +56,3 @@ app.use("/", routes);
 app.use(errorMiddleware);
 
 module.exports = app;
-=======
-app.use("/", routes);
-
-module.exports = app;
->>>>>>> 1492c02556c6d8eebfa0c5af7462a34d78e1a425
