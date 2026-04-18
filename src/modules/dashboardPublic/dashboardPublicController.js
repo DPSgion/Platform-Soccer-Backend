@@ -1,5 +1,6 @@
 const dashboardPublicService = require("./dashboardPublicService");
-exports.getTournaments = async (req, res) => {
+
+/* exports.getTournaments = async (req, res) => {
   try {
     const data = await dashboardPublicService.getTournaments();
     res.json({
@@ -22,4 +23,32 @@ exports.getTournamentMatches = async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
+}; */
+
+const getTeamMember = async (req, res) => {
+  try {
+    const {teamId, playerId} = req.params;
+    const member = await dashboardPublicService.getTeamMember(teamId, playerId);
+
+    if (!member) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Member not found"
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: member
+    });
+  } catch (err) {
+    res.status(500).json({ 
+      success: false, 
+      message: err.message 
+    });
+  }
+};
+
+module.exports = {
+  getTeamMember
 };

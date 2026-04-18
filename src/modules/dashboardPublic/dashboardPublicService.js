@@ -1,3 +1,5 @@
+const db = require("../../dbConfig");
+
 const tournaments = [
   {
     id: "1",
@@ -76,4 +78,24 @@ exports.getTournamentMatches = async (tournamentId) => {
     tournament,
     matches: tournamentMatches,
   };
+};
+
+
+const getTeamMember = async (teamId, playerId) => {
+    const [rows] = await db.execute(
+      `SELECT id, team_id, full_name, image_url, age, height_cm, weight_kg, preferred_foot, main_position, jersey_number, joined_at
+      FROM team_members tm
+      WHERE tm.team_id = ? AND tm.id = ?`,
+      [teamId, playerId]
+    );
+
+    if (rows.length === 0) {
+      throw new Error("Team member not found");
+    }
+
+    return rows[0];
+};
+
+module.exports = {
+  getTeamMember
 };
