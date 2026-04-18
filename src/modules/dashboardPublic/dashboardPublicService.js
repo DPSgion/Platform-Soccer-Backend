@@ -1,3 +1,5 @@
+const pool = require("../../dbConfig");
+
 const tournaments = [
   {
     id: "1",
@@ -76,4 +78,65 @@ exports.getTournamentMatches = async (tournamentId) => {
     tournament,
     matches: tournamentMatches,
   };
+};
+
+function safeParseArrayJson(value) {
+  if (!value) return [];
+
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_error) {
+    return [];
+  }
+}
+
+exports.getPublicTeams = async (query) => {
+  const keyword = (query.name || "").trim();
+  const country = (query.country || "").trim();
+
+  const whereClauses = [];
+  const whereParams = [];
+
+  if (keyword) {
+    whereClauses.push("(t.name LIKE ? OR t.country LIKE ?)");
+    whereParams.push(`%${keyword}%`, `%${keyword}%`);
+  }
+
+  if (country) {
+    whereClauses.push("t.country LIKE ?");
+    whereParams.push(`%${country}%`);
+  }
+
+  const whereSql = whereClauses.length ? `WHERE ${whereClauses.join(" AND ")}` : "";
+
+  const [rows] = await pool.execute(
+    `
+    SELECT
+      t.id,
+      t.name,
+      t.country,
+      t.description,
+      t.logo_url,
+      t.kit_url,
+      t.manager_id,
+      t.created_at,
+      t.updated_at,
+      COALESCE(mc.total_players, 0) AS total_players
+    FROM teams t
+    LEFT JOIN (
+      SELECT team_id, COUNT(*) AS total_players
+      FROM team_members
+      GROUP BY team_id
+    ) mc ON mc.team_id = t.id
+    ${whereSql}
+    ORDER BY t.created_at DESC
+    `,
+    whereParams,
+  );
+
+  return rows.map((team) => ({
+    ...team,
+    kit_url: safeParseArrayJson(team.kit_url),
+  }));
 };

@@ -23,3 +23,16 @@ exports.getTournamentMatches = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+exports.getPublicTeams = async (req, res) => {
+  try {
+    const data = await dashboardPublicService.getPublicTeams(req.query);
+
+    res.json({
+      success: true,
+      data,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
