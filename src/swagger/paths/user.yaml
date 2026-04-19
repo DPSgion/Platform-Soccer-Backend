@@ -1,0 +1,104 @@
+paths:
+
+  /user/profile:
+    get:
+      tags: [User]
+      summary: Get user profile
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserResponse'
+              example:
+                success: true
+                data:
+                  id: "user_1"
+                  full_name: "le huy"
+                  email: "le.huy@example.com"
+                  avatar_url: "https://i.pravatar.cc/150"
+                  phone: "0123456789"
+
+        400:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Error getting user"
+
+
+    put:
+      tags: [User]
+      summary: Update user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+            example:
+              full_name: "Nguyen Van A"
+              phone: "0987654321"
+
+      responses:
+        200:
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateUserResponse'
+              example:
+                message: "User updated successfully"
+                data:
+                  id: "user_2"
+                  full_name: "Nguyen Van A"
+                  phone: "0987654321"
+                  updated_at: "2026-04-13T10:00:00.000Z"
+
+        400:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "No data to update"
+
+
+  /user/avatar:
+    put:
+      tags: [User]
+      summary: Update user avatar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAvatarRequest'
+            example:
+              avatar_url: "https://i.pravatar.cc/150"
+
+      responses:
+        200:
+          description: Updated avatar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateAvatarResponse'
+              example:
+                message: "User avatar updated successfully"
+                data:
+                  id: "user_2"
+                  avatar_url: "https://i.pravatar.cc/150"
+
+        400:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Error updating user avatar"
