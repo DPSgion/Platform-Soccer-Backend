@@ -23,7 +23,22 @@ jobs:
         run: npm ci
 
       - name: 4. Run Unit Test
-        run: npm test
+        env:
+        
+          OCI_TENANCY: ${{ secrets.OCI_TENANCY }}
+          OCI_USER: ${{ secrets.OCI_USER }}
+          OCI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
+          OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+          OCI_REGION: ${{ secrets.OCI_REGION }}
+          
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+        run: npm test -- --forceExit
 
   # JOB 2: Check Docker build
   test-docker-build:
