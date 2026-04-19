@@ -49,7 +49,7 @@ const getTournamentMatches = async (req, res) => {
 
 const getTeams = async (req, res) => {
   try {
-    const data = await dashboardPublicService.getPublicTeams(req.query);
+    const data = await dashboardPublicService.getTeams(req.query);
 
     res.json({
       success: true,
