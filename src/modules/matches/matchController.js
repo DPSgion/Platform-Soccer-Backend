@@ -72,13 +72,22 @@ const addMatchTracking = async (req, res) => {
     }
 };
 
-const setMatchResult = async (req, res) => {
-    try {
-        const result = await matchService.setMatchResult(req.params.matchId, req.body);
-        res.status(200).json({ success: true, data: result });
-    } catch (error) {
-        res.status(400).json({ success: false, message: error.message });
-    }
+const setMatchResult = async (req, res, next) => {
+  try {
+    const result = await matchService.setMatchResult(
+      req.params.matchId,
+      req.body,
+      req.user.id, // 🔥 QUAN TRỌNG
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Set match result successfully",
+      data: result,
+    });
+  } catch (error) {
+    return next(error);
+  }
 };
 
 module.exports = {
