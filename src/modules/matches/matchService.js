@@ -387,3 +387,35 @@ exports.setMatchResult = async (matchId, payload, userId) => {
     status: "COMPLETED",
   };
 };
+// Xem danh sách trận đấu của organizer
+exports.getOrganizerMatches = async (userId) => {
+  const [rows] = await db.query(
+    `
+    SELECT 
+        m.id,
+        m.tournament_id,
+        t.name AS tournament_name,
+        m.home_team_id,
+        ht.name AS home_team_name,
+        ht.logo_url AS home_team_logo,
+        m.away_team_id,
+        at.name AS away_team_name,
+        at.logo_url AS away_team_logo,
+        m.home_score,
+        m.away_score,
+        m.stadium,
+        m.start_time,
+        m.is_active,
+        m.is_cancelled
+    FROM matches m
+    JOIN tournaments t ON m.tournament_id = t.id
+    JOIN teams ht ON m.home_team_id = ht.id
+    JOIN teams at ON m.away_team_id = at.id
+    WHERE t.organizer_id = ?
+    ORDER BY m.start_time DESC
+    `,
+    [userId],
+  );
+
+  return rows;
+};

@@ -20,5 +20,5 @@ router.put('/:matchId/stats', matchController.updateMatchStats);
 router.post('/:matchId/tracking', matchController.addMatchTracking);
 // Nhập kết quả trận đấu
 router.post('/:matchId/result', authMiddleware(["ORGANIZER"]), matchController.setMatchResult);
-
+router.get('/', authMiddleware(["ORGANIZER"]), matchController.getOrganizerMatches);
 module.exports = router;

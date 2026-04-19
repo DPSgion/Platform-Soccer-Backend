@@ -89,7 +89,23 @@ const setMatchResult = async (req, res, next) => {
     return next(error);
   }
 };
+const getOrganizerMatches = async (req, res, next) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return next(new AppError("Unauthorized", 401, "UNAUTHORIZED"));
+    }
 
+    const data = await matchService.getOrganizerMatches(req.user.id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Get organizer matches successfully",
+      data,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
 module.exports = {
     createMatch,
     getMatchDetail,
@@ -99,5 +115,6 @@ module.exports = {
     addMatchEvent,
     updateMatchStats,
     addMatchTracking,
-    setMatchResult
+    setMatchResult,
+    getOrganizerMatches
 };
