@@ -1,35 +1,46 @@
-const getUser = async () => {
-    return {
-        id: "user_1",
-        full_name: "le huy",
-        email: "le.huy@example.com",
-        avatar_url: "https://i.pravatar.cc/150",
-        phone: "0123456789"
-    };
+const db = require("../../dbConfig");
+
+const getUser = async (userId) => {
+    const [rows] = await db.execute(
+        `SELECT id, full_name, phone, avatar_url, created_at, updated_at
+        FROM users 
+        WHERE id = ?`, 
+        [userId]
+    );
+    if (rows.length === 0) {
+        throw new Error("User not found");
+    }
+    return rows[0];
 };
 
-const updateUser = async (data) => {
+const updateUser = async (userId, data) => {
     const { full_name, phone } = data;
 
     if (!full_name && !phone) {
         throw new Error("No data to update");
     }
 
-    return {
-        id: "user_2",
-        full_name: full_name || "le huy",
-        phone: phone || "0123455687",
-        updated_at: new Date().toISOString()
-    };
+    await db.execute(
+        `UPDATE users 
+        SET full_name = COALESCE(?, full_name), phone = COALESCE(?, phone), updated_at = NOW() 
+        WHERE id = ?`, 
+        [full_name, phone, userId]
+    );
+    return await getUser(userId);
 };
 
-const updateAvatar = async (data) => {
-    const { avatar_url } = data;
+const updateAvatar = async (userId, avatar_url) => {
+    if (!avatar_url) {
+        throw new Error("No avatar URL provided");
+    }
 
-    return {
-        id: "user_2",
-        avatar_url: avatar_url || "https://i.pravatar.cc/150"
-    };
+    await db.execute(
+        `UPDATE users 
+        SET avatar_url = ?, updated_at = NOW() 
+        WHERE id = ?`, 
+        [avatar_url, userId]
+    );
+    return await getUser(userId);
 };
 
 module.exports = {

@@ -2,190 +2,110 @@ const { randomUUID } = require("crypto");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
-const BCRYPT_ROUNDS = 10;
+const pool = require("../../dbConfig");
+const authModel = require("./authModel");
+const { AppError } = require("../../middlewares/errorMiddleware");
 
-const useMemoryAuth =
-    process.env.USE_MEMORY_AUTH === "true" ||
-    process.env.USE_MEMORY_AUTH === "1";
+const SALT_ROUNDS = 10;
+const JWT_SECRET = process.env.JWT_SECRET || "secret";
+const JWT_EXPIRES_IN = "24h";
 
-/** MEMORY DB */
-const memoryUsersByEmail = new Map();
-
-// 👉 USER TEST SẴN
-(async () => {
-    if (useMemoryAuth && memoryUsersByEmail.size === 0) {
-        const passwordHash = await bcrypt.hash("123456", BCRYPT_ROUNDS);
-        memoryUsersByEmail.set("test@gmail.com", {
-            id: "1",
-            password_hash: passwordHash,
-            full_name: "Test User",
-            role: "ADMIN"
-        });
-        console.log("✔ MEMORY USER: test@gmail.com / 123456");
+async function ensureEmailNotExists(email) {
+    const existingUser = await authModel.findUserByEmail(pool, email);
+    if (existingUser) {
+        throw new AppError("Email already exists", 409, "EMAIL_EXISTS");
     }
-})();
-
-let pool = null;
-function getPool() {
-    if (useMemoryAuth) return null;
-    if (!pool) {
-        pool = require("../../config/database");
-    }
-    return pool;
 }
 
-function isValidEmail(email) {
-    return typeof email === "string" &&
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-}
+async function register(payload) {
+    const {
+        email,
+        password,
+        full_name: fullName,
+        phone,
+        avatar_url: avatarUrl
+    } = payload;
 
-function defaultFullNameFromEmail(email) {
-    return email.split("@")[0] || "User";
-}
+    const userId = randomUUID();
+    const userRoleId = randomUUID();
+    const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
-// REGISTER
-async function register(body) {
-    const email = typeof body.email === "string"
-        ? body.email.trim().toLowerCase()
-        : "";
+    const connection = await pool.getConnection();
 
-    const password = typeof body.password === "string"
-        ? body.password
-        : "";
+    try {
+        await connection.beginTransaction();
 
-    const fullName = body.full_name || defaultFullNameFromEmail(email);
-
-    if (!email || !isValidEmail(email)) {
-        throw { code: "INVALID_EMAIL" };
-    }
-
-    if (!password || password.length < 6) {
-        throw { code: "INVALID_PASSWORD" };
-    }
-
-    // MEMORY MODE
-    if (useMemoryAuth) {
-        if (memoryUsersByEmail.has(email)) {
-            throw { code: "EMAIL_EXISTS" };
+        // Get the ORGANIZER role ID from database
+        const organizerRole = await authModel.findRoleByCode(connection, "ORGANIZER");
+        if (!organizerRole) {
+            throw new AppError("ORGANIZER role not found in database", 500, "ROLE_NOT_FOUND");
         }
 
-        const id = randomUUID();
-        const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
-
-        memoryUsersByEmail.set(email, {
-            id,
-            password_hash: passwordHash,
-            full_name: fullName,
-            role: "ADMIN"
+        await authModel.createUser(connection, {
+            id: userId,
+            email,
+            passwordHash,
+            fullName,
+            phone,
+            avatarUrl
         });
 
-        const token = jwt.sign(
-            { sub: id, email, role: "ADMIN" },
-            JWT_SECRET,
-            { expiresIn: JWT_EXPIRES_IN }
-        );
+        await authModel.createUserRole(connection, {
+            id: userRoleId,
+            userId,
+            roleId: organizerRole.id
+        });
+
+        await connection.commit();
 
         return {
-            token,
-            user: { id, email, full_name: fullName, role: "ADMIN" }
-        };
-    }
-
-    // MYSQL MODE
-    const db = getPool();
-    if (!db) throw new Error("NO_DB");
-
-    const [existing] = await db.execute(
-        `SELECT id FROM users WHERE email = ? LIMIT 1`,
-        [email]
-    );
-
-    if (existing.length > 0) {
-        throw { code: "EMAIL_EXISTS" };
-    }
-
-    const id = randomUUID();
-    const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
-
-    await db.execute(
-        `INSERT INTO users (id, email, password_hash, full_name, role)
-         VALUES (?, ?, ?, ?, 'ADMIN')`,
-        [id, email, passwordHash, fullName]
-    );
-
-    const token = jwt.sign(
-        { sub: id, email, role: "ADMIN" },
-        JWT_SECRET,
-        { expiresIn: JWT_EXPIRES_IN }
-    );
-
-    return {
-        token,
-        user: { id, email, full_name: fullName, role: "ADMIN" }
-    };
-}
-
-// LOGIN
-async function login(body) {
-    const email = typeof body.email === "string"
-        ? body.email.trim().toLowerCase()
-        : "";
-
-    const password = typeof body.password === "string"
-        ? body.password
-        : "";
-
-    if (!email || !password) {
-        throw { code: "INVALID_CREDENTIALS" };
-    }
-
-    // MEMORY MODE
-    if (useMemoryAuth) {
-        const user = memoryUsersByEmail.get(email);
-        if (!user) throw { code: "INVALID_CREDENTIALS" };
-
-        const match = await bcrypt.compare(password, user.password_hash);
-        if (!match) throw { code: "INVALID_CREDENTIALS" };
-
-        const token = jwt.sign(
-            { sub: user.id, email, role: user.role },
-            JWT_SECRET,
-            { expiresIn: JWT_EXPIRES_IN }
-        );
-
-        return {
-            token,
             user: {
-                id: user.id,
+                id: userId,
                 email,
-                full_name: user.full_name,
-                role: user.role
+                full_name: fullName,
+                phone: phone || "",
+                avatar_url: avatarUrl || "",
+                roles: ["ORGANIZER"]
             }
         };
+    } catch (error) {
+        await connection.rollback();
+
+        if (error.code === "ER_DUP_ENTRY") {
+            throw new AppError("Email already exists", 409, "EMAIL_EXISTS");
+        }
+
+        throw error;
+    } finally {
+        connection.release();
+    }
+}
+
+async function login(payload) {
+    const {
+        email,
+        password
+    } = payload;
+
+    const user = await authModel.findUserByEmail(pool, email);
+
+    if (!user) {
+        throw new AppError("Email hoặc mật khẩu không chính xác", 401, "INVALID_CREDENTIALS");
     }
 
-    // MYSQL MODE
-    const db = getPool();
-    if (!db) throw new Error("NO_DB");
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+    if (!isPasswordValid) {
+        throw new AppError("Email hoặc mật khẩu không chính xác", 401, "INVALID_CREDENTIALS");
+    }
 
-    const [rows] = await db.execute(
-        `SELECT * FROM users WHERE email = ? LIMIT 1`,
-        [email]
-    );
+    const roles = await authModel.findRolesByUserId(pool, user.id);
 
-    const user = rows[0];
-    if (!user) throw { code: "INVALID_CREDENTIALS" };
+    const tokenPayload = {
+        id: user.id,
+        roles
+    };
 
-    const match = await bcrypt.compare(password, user.password_hash);
-    if (!match) throw { code: "INVALID_CREDENTIALS" };
-
-    const token = jwt.sign(
-        { sub: user.id, email: user.email, role: user.role },
-        JWT_SECRET,
-        { expiresIn: JWT_EXPIRES_IN }
-    );
+    const token = jwt.sign(tokenPayload, JWT_SECRET, {expiresIn: JWT_EXPIRES_IN});
 
     return {
         token,
@@ -193,9 +113,15 @@ async function login(body) {
             id: user.id,
             email: user.email,
             full_name: user.full_name,
-            role: user.role
+            phone: user.phone,
+            avatar_url: user.avatar_url,
+            roles
         }
     };
 }
 
-module.exports = { register, login };
+module.exports = {
+    ensureEmailNotExists,
+    register,
+    login
+};
