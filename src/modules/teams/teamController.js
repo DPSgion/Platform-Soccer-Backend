@@ -1,3 +1,24 @@
+// Xoá member khỏi team
+const deleteTeamMember = async (req, res, next) => {
+  try {
+    const { teamId, playerId } = req.params;
+    // Có thể kiểm tra quyền ở đây nếu cần (ví dụ: chỉ manager hoặc organizer)
+    const affectedRows = await teamService.deleteTeamMember(teamId, playerId);
+    if (affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `Không tìm thấy cầu thủ với ID "${playerId}" trong đội "${teamId}" hoặc đã bị xoá trước đó`,
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Xoá thành viên khỏi đội thành công"
+    });
+  } catch (error) {
+    console.error("Error in deleteTeamMember:", error);
+    next(error);
+  }
+};
 const teamService = require("./teamService");
 const { AppError } = require("../../middlewares/errorMiddleware");
 const { uploadFileToOCI } = require('../../utils/ociUpload');
@@ -301,5 +322,6 @@ module.exports = {
   getTeamMembers,
   getTeamMemberById,
   uploadLogo,
-  uploadKit
+  uploadKit,
+  deleteTeamMember
 };
