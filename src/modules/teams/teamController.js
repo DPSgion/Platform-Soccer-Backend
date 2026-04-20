@@ -1,35 +1,46 @@
 const teamService = require("./teamService");
 const { AppError } = require("../../middlewares/errorMiddleware");
+const { uploadFileToOCI } = require('../../utils/ociUpload');
 
 // CREATE
 const createTeam = async (req, res, next) => {
   try {
-    const {
-      name,
-      country = "",
-      description = "",
-      logo_url = "",
-      kit_url = ""
-    } = req.body;
+    const { name, country = "", description = "" } = req.body;
+    const files = req.files || [];
 
-    if (!name || !name.trim()) {
-      return next(new AppError("Name is required", 400, "VALIDATION_ERROR"));
+    let logo_url = "";
+    let kit_url = [];
+
+    // Upload logo - tìm theo fieldname
+    const logoFile = files.find(f => f.fieldname === 'logo');
+    if (logoFile) {
+      logo_url = await uploadFileToOCI(logoFile);
     }
 
-  const team = await teamService.createTeam({
-    name: name.trim(),
-    country,
-    description,
-    logo_url,
-    kit_url: JSON.stringify(Array.isArray(kit_url) ? kit_url : []),
-    manager_id: req.user.id
-  });
+    // Upload kit - tìm tất cả files có fieldname 'kit'
+    const kitFiles = files.filter(f => f.fieldname === 'kit');
+    if (kitFiles.length > 0) {
+      kit_url = await Promise.all(kitFiles.map(f => uploadFileToOCI(f)));
+    }
 
-    return res.status(201).json({
-      success: true,
-      message: "Create team successfully",
-      data: team
+    // Nếu có URL trong body mà không upload file
+    if (req.body.logo_url && !logo_url) {
+      logo_url = req.body.logo_url;
+    }
+    if (req.body.kit_url) {
+      kit_url = Array.isArray(req.body.kit_url) ? req.body.kit_url : JSON.parse(req.body.kit_url);
+    }
+
+    const team = await teamService.createTeam({
+      name: name.trim(),
+      country,
+      description,
+      logo_url,
+      kit_url: JSON.stringify(kit_url),
+      manager_id: req.user.id
     });
+
+    return res.status(201).json({ success: true, message: "Create team successfully", data: team });
   } catch (error) {
     return next(error);
   }
@@ -67,22 +78,92 @@ const updateTeam = async (req, res, next) => {
     const { teamId } = req.params;
     const {
       name,
-      country = "",
-      description = "",
-      logo_url = "",
-      kit_url = ""
-    } = req.body;
-
-    if (!name || !name.trim()) {
-      return next(new AppError("Name is required", 400, "VALIDATION_ERROR"));
-    }
-
-    const affectedRows = await teamService.updateTeam(teamId, {
-      name: name.trim(),
       country,
       description,
-      logo_url,
-      kit_url: JSON.stringify(Array.isArray(kit_url) ? kit_url : []),
+      logo_url: logoUrlFromBody,
+      kit_url: kitUrlFromBody
+    } = req.body;
+
+    const files = Array.isArray(req.files) ? req.files : [];
+
+    // 1. Lấy dữ liệu hiện tại
+    const existingTeam = await teamService.getTeamById(teamId);
+    if (!existingTeam) {
+      return next(new AppError("Team not found", 404, "TEAM_NOT_FOUND"));
+    }
+
+    // 2. Validate partial input
+    if (name !== undefined && typeof name !== "string") {
+      return next(new AppError("Name must be a string", 400, "VALIDATION_ERROR"));
+    }
+
+    if (country !== undefined && typeof country !== "string") {
+      return next(new AppError("Country must be a string", 400, "VALIDATION_ERROR"));
+    }
+
+    if (description !== undefined && typeof description !== "string") {
+      return next(new AppError("Description must be a string", 400, "VALIDATION_ERROR"));
+    }
+
+    if (name !== undefined && name.trim() === "") {
+      return next(new AppError("Name cannot be empty", 400, "VALIDATION_ERROR"));
+    }
+
+    // 3. Giữ dữ liệu cũ nếu không gửi field mới
+    const finalName = (name ?? existingTeam.name ?? "").trim();
+    const finalCountry = country ?? existingTeam.country ?? "";
+    const finalDescription = description ?? existingTeam.description ?? "";
+
+    // 4. Giữ ảnh cũ làm mặc định
+    let finalLogoUrl = existingTeam.logo_url || "";
+    let finalKitUrls = Array.isArray(existingTeam.kit_url) ? existingTeam.kit_url : [];
+
+    // 5. Nếu body có truyền logo_url thì dùng nó
+    if (logoUrlFromBody !== undefined) {
+      if (typeof logoUrlFromBody !== "string") {
+        return next(new AppError("logo_url must be a string", 400, "VALIDATION_ERROR"));
+      }
+      finalLogoUrl = logoUrlFromBody;
+    }
+
+    // 6. Nếu body có truyền kit_url thì parse và dùng nó
+    if (kitUrlFromBody !== undefined) {
+      try {
+        const parsed =
+          Array.isArray(kitUrlFromBody) ? kitUrlFromBody : JSON.parse(kitUrlFromBody);
+
+        if (!Array.isArray(parsed)) {
+          return next(new AppError("kit_url must be an array", 400, "VALIDATION_ERROR"));
+        }
+
+        finalKitUrls = parsed;
+      } catch (error) {
+        return next(new AppError("kit_url must be a valid JSON array", 400, "VALIDATION_ERROR"));
+      }
+    }
+
+    // 7. Upload logo mới nếu có
+    const logoFile = files.find((file) => file.fieldname === "logo");
+    if (logoFile) {
+      finalLogoUrl = await uploadFileToOCI(logoFile);
+    }
+
+    // 8. Upload kit mới nếu có -> append vào kit cũ
+    const kitFiles = files.filter((file) => file.fieldname === "kit");
+    if (kitFiles.length > 0) {
+      const uploadedKitUrls = await Promise.all(
+        kitFiles.map((file) => uploadFileToOCI(file))
+      );
+      finalKitUrls = [...finalKitUrls, ...uploadedKitUrls];
+    }
+
+    // 9. Update DB
+    const affectedRows = await teamService.updateTeam(teamId, {
+      name: finalName,
+      country: finalCountry,
+      description: finalDescription,
+      logo_url: finalLogoUrl,
+      kit_url: JSON.stringify(finalKitUrls),
       manager_id: req.user.id
     });
 
@@ -96,6 +177,7 @@ const updateTeam = async (req, res, next) => {
       );
     }
 
+    // 10. Lấy lại dữ liệu mới nhất
     const updatedTeam = await teamService.getTeamById(teamId);
 
     return res.status(200).json({
@@ -187,6 +269,28 @@ const getTeamMemberById = async (req, res, next) => {
   }
 };
 
+// uploadLogo
+const uploadLogo = async (req, res, next) => {
+  try {
+    const { teamId } = req.params;
+    const logoUrl = await uploadFileToOCI(req.file);
+    await teamService.updateTeam(teamId, { logo_url: logoUrl, manager_id: req.user.id });
+    return res.status(200).json({ success: true, message: "Logo uploaded", data: { logo_url: logoUrl } });
+  } catch (error) { return next(error); }
+};
+
+// uploadKit
+const uploadKit = async (req, res, next) => {
+  try {
+    const { teamId } = req.params;
+    const kitUrls = await Promise.all(req.files.map(f => uploadFileToOCI(f)));
+    const existingTeam = await teamService.getTeamById(teamId);
+    const existingKits = existingTeam.kit_url || [];
+    const newKits = [...existingKits, ...kitUrls];
+    await teamService.updateTeam(teamId, { kit_url: JSON.stringify(newKits), manager_id: req.user.id });
+    return res.status(200).json({ success: true, message: "Kit uploaded", data: { kit_url: newKits } });
+  } catch (error) { return next(error); }
+};
 
 module.exports = {
   createTeam,
@@ -196,4 +300,6 @@ module.exports = {
   deleteTeam,
   getTeamMembers,
   getTeamMemberById,
+  uploadLogo,
+  uploadKit
 };

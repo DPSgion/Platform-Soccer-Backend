@@ -46,27 +46,44 @@ const getTournamentMatches = async (req, res) => {
     });
   }
 };
-// GET /public/teams?q=...
+
 const getTeams = async (req, res) => {
   try {
-    const { q = "" } = req.query;
+    const data = await dashboardPublicService.getTeams(req.query);
 
-    const data = await dashboardPublicService.getTeams(q);
-
-    return res.status(200).json({
+    res.json({
       success: true,
-      message: "Get teams successfully",
       data,
     });
   } catch (err) {
-    return res.status(err.statusCode || 500).json({
-      success: false,
-      code: err.code || "INTERNAL_ERROR",
-      message: err.message || "Internal Server Error",
-      data: null,
+    res.status(500).json({ success: false, message: err.message });
+  }
+}; 
+
+const getTeamMemberDetail = async (req, res) => {
+  try {
+    const {teamId, playerId} = req.params;
+    const member = await dashboardPublicService.getTeamMemberDetail(teamId, playerId);
+
+    if (!member) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Member not found"
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: member
+    });
+  } catch (err) {
+    res.status(500).json({ 
+      success: false, 
+      message: err.message 
     });
   }
 };
+
 const getTeamMembers = async (req, res) => {
   try {
     const { teamId } = req.params;
@@ -105,4 +122,5 @@ module.exports = {
   getTournamentMatches,
   getTeams,
   getTeamMembers,
+  getTeamMemberDetail
 };

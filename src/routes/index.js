@@ -8,6 +8,7 @@ const dashboardPublicRoutes = require("../modules/dashboardPublic/dashboardPubli
 const teamRoutes = require("../modules/teams/teamRoutes");
 const matchRoutes = require("../modules/matches/matchRoutes");
 const authRoutes = require("../modules/auth/authRoutes");
+const matchRoutes = require("../modules/matches/matchRoutes");
 
 router.use("/matches", matchRoutes);
 router.use("/tournaments", tournamentRoutes);
@@ -16,6 +17,6 @@ router.use("/public", dashboardPublicRoutes);
 router.use("/teams", teamRoutes);
 router.use("/matches", matchRoutes);
 router.use("/auth", authRoutes);
-
+router.use("/matches", matchRoutes);
 
 module.exports = router;
