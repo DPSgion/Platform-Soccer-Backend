@@ -211,31 +211,48 @@ exports.createMatch = async (data) => {
   };
 };
 
-exports.getMatchDetail = async (matchId) => {
-  const match = matches.find((m) => m.id === matchId);
-  if (!match) throw new Error("Match not found");
+// matchService.js
+
+exports.getMatchDetail = async (matchId, userId) => {
+  // 1. Query lấy thông tin trận đấu kèm theo organizer_id của giải đấu
+  const [rows] = await db.query(
+    `SELECT m.*, t.organizer_id, 
+                ht.name AS home_team_name, ht.logo_url AS home_team_logo,
+                at.name AS away_team_name, at.logo_url AS away_team_logo,
+                t.name AS tournament_name
+         FROM matches m
+         JOIN tournaments t ON m.tournament_id = t.id
+         JOIN teams ht ON m.home_team_id = ht.id
+         JOIN teams at ON m.away_team_id = at.id
+         WHERE m.id = ?`,
+    [matchId]
+  );
+
+  if (rows.length === 0) {
+    throw new Error("Match not found");
+  }
+
+  const match = rows[0];
+
+  // 2. Ép kiểu String cho cả 2 bên để chắc chắn so sánh khớp (1 vs '1')
+  if (String(match.organizer_id) !== String(userId)) {
+    // Nếu không khớp, ném lỗi 403
+    const error = new Error("Forbidden");
+    error.status = 403;
+    error.code = "FORBIDDEN";
+    throw error;
+  }
+
+  // 3. Nếu khớp, trả về dữ liệu đúng cấu trúc
   return {
     id: match.id,
-    tournament: match.tournamentId
-      ? { id: match.tournamentId, name: "Premier League" }
-      : null,
-    homeTeam: { ...match.homeTeam, shortName: "MAN" },
-    awayTeam: { ...match.awayTeam, shortName: "RMA" },
-    score: match.score,
-    status: match.status,
-    liveMinute: match.liveMinute || null,
-    startTime: match.startTime,
-    venue: match.venue,
-    attendance: match.attendance,
-    refereeName: match.refereeName,
-    timeline: match.events || [],
-    lineups: match.lineups || { home: {}, away: {} },
-    stats: match.stats || { home: {}, away: {} },
-    tracking: match.tracking || { home: {}, away: {} },
-    result: match.result || null,
-    positionalDominance: match.positionalDominance || null,
-    createdAt: match.createdAt,
-    updatedAt: match.updatedAt,
+    tournament: { id: match.tournament_id, name: match.tournament_name },
+    homeTeam: { name: match.home_team_name, logoUrl: match.home_team_logo },
+    awayTeam: { name: match.away_team_name, logoUrl: match.away_team_logo },
+    score: { home: match.home_score, away: match.away_score },
+    stadium: match.stadium,
+    startTime: match.start_time,
+    status: match.is_active ? "LIVE" : "SCHEDULED"
   };
 };
 
