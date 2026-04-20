@@ -14,18 +14,38 @@ const getUser = async (userId) => {
 };
 
 const updateUser = async (userId, data) => {
-    const { full_name, phone } = data;
+    const fields = [];
+    const values = [];
 
-    if (!full_name && !phone) {
+    if (data.full_name !== undefined) {
+        if(data.full_name.trim() === "") {
+            throw new Error("Full name cannot be empty");
+        }
+        fields.push("full_name = ?");
+        values.push(data.full_name);
+    }
+
+    if (data.phone !== undefined) {
+        fields.push("phone = ?");
+        values.push(data.phone);
+    }
+
+    if (fields.length === 0) {
         throw new Error("No data to update");
     }
 
-    await db.execute(
-        `UPDATE users 
-        SET full_name = COALESCE(?, full_name), phone = COALESCE(?, phone), updated_at = NOW() 
-        WHERE id = ?`, 
-        [full_name, phone, userId]
-    );
+    fields.push("updated_at = NOW()");
+
+    const query = `
+        UPDATE users 
+        SET ${fields.join(", ")}
+        WHERE id = ?
+    `;
+
+    values.push(userId);
+
+    await db.execute(query, values);
+
     return await getUser(userId);
 };
 
