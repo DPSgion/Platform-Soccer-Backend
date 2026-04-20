@@ -9,12 +9,18 @@ const createMatch = async (req, res) => {
     }
 };
 
-const getMatchDetail = async (req, res) => {
+const getMatchDetail = async (req, res, next) => {
     try {
-        const match = await matchService.getMatchDetail(req.params.matchId);
+
+        // Lấy userId từ token đã được authMiddleware giải mã
+        const userId = req.user.id;
+        const matchId = req.params.matchId;
+
+        const match = await matchService.getMatchDetail(matchId, userId);
+
         res.status(200).json({ success: true, data: match });
     } catch (error) {
-        res.status(404).json({ success: false, message: error.message });
+        next(error); // Dùng next(error) để errorMiddleware xử lý cho đồng bộ
     }
 };
 
@@ -72,15 +78,40 @@ const addMatchTracking = async (req, res) => {
     }
 };
 
-const setMatchResult = async (req, res) => {
+const setMatchResult = async (req, res, next) => {
     try {
-        const result = await matchService.setMatchResult(req.params.matchId, req.body);
-        res.status(200).json({ success: true, data: result });
+        const result = await matchService.setMatchResult(
+            req.params.matchId,
+            req.body,
+            req.user.id, // 🔥 QUAN TRỌNG
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Set match result successfully",
+            data: result,
+        });
     } catch (error) {
-        res.status(400).json({ success: false, message: error.message });
+        return next(error);
     }
 };
+const getOrganizerMatches = async (req, res, next) => {
+    try {
+        if (!req.user || !req.user.id) {
+            return next(new AppError("Unauthorized", 401, "UNAUTHORIZED"));
+        }
 
+        const data = await matchService.getOrganizerMatches(req.user.id);
+
+        return res.status(200).json({
+            success: true,
+            message: "Get organizer matches successfully",
+            data,
+        });
+    } catch (error) {
+        return next(error);
+    }
+};
 module.exports = {
     createMatch,
     getMatchDetail,
@@ -90,5 +121,6 @@ module.exports = {
     addMatchEvent,
     updateMatchStats,
     addMatchTracking,
-    setMatchResult
+    setMatchResult,
+    getOrganizerMatches
 };
