@@ -243,6 +243,7 @@ async function getTeamsByManager(managerId) {
 // ===== TEAM MEMBERS =====
 const getTeamMembers = (teamId) =>
   teamMembers.filter((member) => member.team_id === teamId);
+
 const getTeamMemberById = async (teamId, playerId) => {
   const [rows] = await pool.execute(
     `
@@ -266,8 +267,16 @@ const getTeamMemberById = async (teamId, playerId) => {
     `,
     [teamId, playerId],
   );
-
   return rows[0] || null;
+};
+
+// Xoá member khỏi team
+const deleteTeamMember = async (teamId, playerId) => {
+  const [result] = await pool.execute(
+    `DELETE FROM team_members WHERE team_id = ? AND id = ?`,
+    [teamId, playerId]
+  );
+  return result.affectedRows;
 };
 
 module.exports = {
@@ -278,5 +287,6 @@ module.exports = {
   deleteTeam,
   getTeamMembers,
   getTeamMemberById,
+  deleteTeamMember,
   getTeamsByManager
 };
