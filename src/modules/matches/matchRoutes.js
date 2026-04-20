@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const matchController = require('./matchController');
-
+const { authMiddleware } = require("../../middlewares/authMiddleware");
 // Tạo trận đấu
 router.post('/', matchController.createMatch);
 // Xem chi tiết trận đấu
-router.get('/:matchId', matchController.getMatchDetail);
+router.get('/:matchId', authMiddleware(["ORGANIZER"]), matchController.getMatchDetail);
 // Cập nhật trạng thái trận đấu
 router.put('/:matchId/status', matchController.updateMatchStatus);
 // Xem đội hình
@@ -19,6 +19,6 @@ router.put('/:matchId/stats', matchController.updateMatchStats);
 // Gửi tracking
 router.post('/:matchId/tracking', matchController.addMatchTracking);
 // Nhập kết quả trận đấu
-router.post('/:matchId/result', matchController.setMatchResult);
-
+router.post('/:matchId/result', authMiddleware(["ORGANIZER"]), matchController.setMatchResult);
+router.get('/', authMiddleware(["ORGANIZER"]), matchController.getOrganizerMatches);
 module.exports = router;
