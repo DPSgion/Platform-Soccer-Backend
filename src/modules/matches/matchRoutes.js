@@ -5,7 +5,7 @@ const { authMiddleware } = require("../../middlewares/authMiddleware");
 // Tạo trận đấu
 router.post('/', matchController.createMatch);
 // Xem chi tiết trận đấu
-router.get('/:matchId', matchController.getMatchDetail);
+router.get('/:matchId', authMiddleware(["ORGANIZER"]), matchController.getMatchDetail);
 // Cập nhật trạng thái trận đấu
 router.put('/:matchId/status', matchController.updateMatchStatus);
 // Xem đội hình
