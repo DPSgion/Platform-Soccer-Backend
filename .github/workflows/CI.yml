@@ -73,8 +73,12 @@ jobs:
       - name: Install k6
         run: |
           sudo apt update
+          sudo apt install -y gnupg software-properties-common
+          curl -s https://dl.k6.io/key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/k6-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt update
           sudo apt install -y k6
-
+          
       - name: Run k6 test
         run: |
           k6 run k6/team-load-test.js
