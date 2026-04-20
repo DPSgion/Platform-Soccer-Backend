@@ -16,7 +16,6 @@ router.delete("/:teamId", authMiddleware(["ORGANIZER"]), teamController.deleteTe
 
 router.get("/:teamId/members", teamController.getTeamMembers);
 router.get("/:teamId/members/:playerId", teamController.getTeamMemberById);
-router.delete("/:teamId/members/:playerId",teamController.deleteTeamMember
-);
+router.delete("/:teamId/members/:playerId",teamController.deleteTeamMember);
 
 module.exports = router;
