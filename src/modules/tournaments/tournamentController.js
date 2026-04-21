@@ -1,8 +1,13 @@
 const tournamentService = require("./tournamentService");
 
 exports.getAllTournaments = (req, res) => {
-    const data = tournamentService.getAll();
-    res.json(data);
+    const organizerId = req.user.id;
+    const data = tournamentService.getAll(organizerId);
+
+    return res.status(200).json({
+        success: true,
+        data
+    });
 };
 
 exports.createTournament = (req, res) => {
@@ -18,8 +23,15 @@ exports.updateTournament = (req, res) => {
 
 exports.deleteTournament = (req, res) => {
     const { id } = req.params;
-    const data = tournamentService.delete(id);
-    res.json(data);
+    const organizerId = req.user.id;
+
+    const data = tournamentService.delete(id, organizerId);
+
+    if (!data.success) {
+        return res.status(data.statusCode || 400).json(data);
+    }
+
+    return res.status(200).json(data);
 };
 
 exports.getTournamentDetails = (req, res) => {

@@ -23,8 +23,8 @@ const tournaments = [
     }
 ];
 
-exports.getAll = () => {
-    return tournaments;
+exports.getAll = (organizerId) => {
+    return tournaments.filter(t => t.organizer_id === organizerId);
 };
 
 exports.create = (data) => {
@@ -60,17 +60,42 @@ exports.update = (id, data) => {
     };
 };
 
-exports.delete = (id) => {
+exports.delete = (id, organizerId) => {
     const index = tournaments.findIndex(t => t.id === id);
 
     if (index === -1) {
-        return { message: "Tournament not found" };
+        return {
+            success: false,
+            statusCode: 404,
+            message: "Tournament not found"
+        };
+    }
+
+    const tournament = tournaments[index];
+
+    // Chỉ organizer của giải mới được xóa
+    if (tournament.organizer_id !== organizerId) {
+        return {
+            success: false,
+            statusCode: 403,
+            message: "You are not allowed to delete this tournament"
+        };
+    }
+
+    // Chỉ cho xóa khi giải chưa diễn ra
+    if (tournament.status !== "UPCOMING") {
+        return {
+            success: false,
+            statusCode: 409,
+            message: "Only UPCOMING tournaments can be deleted"
+        };
     }
 
     tournaments.splice(index, 1);
 
     return {
-        message: "Tournament deleted"
+        success: true,
+        message: "Tournament deleted successfully"
     };
 };
 
