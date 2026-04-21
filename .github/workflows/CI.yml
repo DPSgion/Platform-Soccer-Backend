@@ -6,9 +6,20 @@ on:
     branches: [ "main" ]
 
 jobs:
-  # JOB 1: Check code NodeJs
-  test-code:
+  # JOB 1: Test API Integration & Load Test
+  integration-and-load-tests:
     runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_DATABASE: cupzone_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
     steps:
       - name: 1. Checkout code
         uses: actions/checkout@v6
@@ -22,28 +33,50 @@ jobs:
       - name: 3. Install dependencies
         run: npm ci
 
-      - name: 4. Run Unit Test
-        env:
+      - name: 4. Import Database Schema
+        run: mysql -h 127.0.0.1 -u root -proot_password cupzone_test < database/init_schema.sql
         
+      - name: 5. Start Backend & Wait
+        run: |
+          npm start &
+          npx --yes wait-on tcp:3000 
+        env:
+          DB_HOST: 127.0.0.1
+          DB_USER: root
+          DB_PASSWORD: root_password
+          DB_NAME: cupzone_test
+          DB_PORT: 3306
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
           OCI_TENANCY: ${{ secrets.OCI_TENANCY }}
           OCI_USER: ${{ secrets.OCI_USER }}
           OCI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
           OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
           OCI_REGION: ${{ secrets.OCI_REGION }}
-          
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
+      - name: 6. Run API Integration Tests
         run: npm test -- --forceExit
+        env:
+          BASE_URL: 'http://localhost:3000'
+          DB_HOST: 127.0.0.1
+          DB_USER: root
+          DB_PASSWORD: root_password
+          DB_NAME: cupzone_test
+          DB_PORT: 3306
+
+      - name: 7. Run k6 Load Test
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: k6/team-load-test.js
+        env:
+          BASE_URL: 'http://localhost:3000'
+          TOKEN: ${{ secrets.TOKEN }}
+
 
   # JOB 2: Check Docker build
   test-docker-build:
     runs-on: ubuntu-latest
-    needs: test-code
+    needs: integration-and-load-tests
     
     steps:
       - name: 1. Checkout code
@@ -60,27 +93,3 @@ jobs:
           tags: cupzone-backend:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-  # JOB 3: Run k6 load test
-  k6-test:
-    runs-on: ubuntu-latest
-    needs: test-code
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install k6
-        run: |
-          sudo apt update
-          sudo apt install -y gnupg software-properties-common
-          curl -s https://dl.k6.io/key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/k6-archive-keyring.gpg
-          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
-          sudo apt update
-          sudo apt install -y k6
-          
-      - name: Run k6 test
-        run: |
-          k6 run k6/team-load-test.js
-        env:
-          TOKEN: ${{ secrets.TOKEN }}
