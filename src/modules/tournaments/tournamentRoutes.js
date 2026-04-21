@@ -25,4 +25,7 @@ router.post("/:id/register-team", controller.registerTeam);
 // Tournament profile
 router.get("/:id/profile", controller.getTournamentProfile);
 
+// Create tournament (alternative route)
+router.post("/", controller.createTournament);
+
 module.exports = router;
