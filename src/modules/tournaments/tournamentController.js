@@ -1,13 +1,13 @@
 const tournamentService = require("./tournamentService");
 
-exports.getAllTournaments = (req, res) => {
-    const organizerId = req.user.id;
-    const data = tournamentService.getAll(organizerId);
-
-    return res.status(200).json({
-        success: true,
-        data
-    });
+exports.getAllTournaments = async (req, res, next) => {
+    try {
+        const organizerId = req.user.id;
+        const data = await tournamentService.getAllTournaments(organizerId);
+        return res.status(200).json({ success: true, data });
+    } catch (error) {
+        return next(error);
+    }
 };
 
 exports.createTournament = (req, res) => {
@@ -21,17 +21,16 @@ exports.updateTournament = (req, res) => {
     res.json(data);
 };
 
-exports.deleteTournament = (req, res) => {
-    const { id } = req.params;
-    const organizerId = req.user.id;
-
-    const data = tournamentService.delete(id, organizerId);
-
-    if (!data.success) {
-        return res.status(data.statusCode || 400).json(data);
+exports.deleteTournament = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const organizerId = req.user.id;
+        await tournamentService.deleteTournament(id, organizerId);
+        return res.status(200).json({ success: true, message: "Tournament deleted successfully" });
+    } catch (error) {
+        const statusCode = error.statusCode || 500;
+        return res.status(statusCode).json({ success: false, code: error.code, message: error.message });
     }
-
-    return res.status(200).json(data);
 };
 
 exports.getTournamentDetails = (req, res) => {
