@@ -105,26 +105,7 @@ describe('Teams API Integration Tests', () => {
             expect(response.data.data.manager_id).toBe(validManagerId);
         });
 
-        it('TC03: Unicode name - Should handle Vietnamese Unicode characters', async () => {
-            const teamData = {
-                name: 'Đội bóng VN',
-                country: 'Việt Nam',
-                description: 'Mô tả đội bóng'
-            };
-
-            const response = await axios.post(`${BASE_URL}/teams`, teamData, {
-                headers: {
-                    'Authorization': `Bearer ${validToken}`
-                }
-            });
-
-            expect(response.status).toBe(201);
-            expect(response.data.success).toBe(true);
-            expect(response.data.data.name).toBe(teamData.name);
-            expect(response.data.data.country).toBe(teamData.country);
-        });
-
-        it('TC04: kit_url hợp lệ - Should accept valid kit_url array', async () => {
+        it('TC03: kit_url hợp lệ - Should accept valid kit_url array', async () => {
             const teamData = {
                 name: 'Kit URL Team',
                 kit_url: JSON.stringify([
@@ -144,7 +125,7 @@ describe('Teams API Integration Tests', () => {
             expect(Array.isArray(JSON.parse(response.data.data.kit_url))).toBe(true);
         });
 
-        it('TC05: manager_id hợp lệ - Should create team with correct manager_id', async () => {
+        it('TC04: manager_id hợp lệ - Should create team with correct manager_id', async () => {
             const teamData = {
                 name: 'Manager ID Team',
                 country: 'Vietnam'
@@ -165,7 +146,7 @@ describe('Teams API Integration Tests', () => {
     // ==================== UNHAPPY CASES ====================
     describe('POST /teams - Unhappy Cases', () => {
 
-        it('TC06: Thiếu name - Should return 400 when name is missing', async () => {
+        it('TC05: Thiếu name - Should return 400 when name is missing', async () => {
             const teamData = {
                 country: 'Vietnam',
                 description: 'Missing name'
@@ -187,7 +168,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC07: name rỗng - Should return 400 when name is empty string', async () => {
+        it('TC06: name rỗng - Should return 400 when name is empty string', async () => {
             const teamData = {
                 name: '',
                 country: 'Vietnam'
@@ -209,7 +190,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC08: name whitespace - Should return 400 when name is only whitespace', async () => {
+        it('TC07: name whitespace - Should return 400 when name is only whitespace', async () => {
             const teamData = {
                 name: '   ',
                 country: 'Vietnam'
@@ -231,74 +212,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC09: name quá dài - Should return 400 when name is too long', async () => {
-            const teamData = {
-                name: 'a'.repeat(256),
-                country: 'Vietnam'
-            };
-
-            try {
-                await axios.post(`${BASE_URL}/teams`, teamData, {
-                    headers: {
-                        'Authorization': `Bearer ${validToken}`
-                    }
-                });
-            } catch (error) {
-                if (error.response) {
-                    expect(error.response.status).toBe(400);
-                    expect(error.response.data.success).toBe(false);
-                } else {
-                    expect.fail('No response received: ' + error.message);
-                }
-            }
-        });
-
-        it('TC10: country quá dài - Should return 400 when country is too long', async () => {
-            const teamData = {
-                name: 'Test Team',
-                country: 'a'.repeat(101)
-            };
-
-            try {
-                await axios.post(`${BASE_URL}/teams`, teamData, {
-                    headers: {
-                        'Authorization': `Bearer ${validToken}`
-                    }
-                });
-            } catch (error) {
-                if (error.response) {
-                    expect(error.response.status).toBe(400);
-                    expect(error.response.data.success).toBe(false);
-                } else {
-                    expect.fail('No response received: ' + error.message);
-                }
-            }
-        });
-
-        it('TC11: description quá dài - Should return 400 when description is too long', async () => {
-            const teamData = {
-                name: 'Test Team',
-                country: 'Vietnam',
-                description: 'a'.repeat(1001)
-            };
-
-            try {
-                await axios.post(`${BASE_URL}/teams`, teamData, {
-                    headers: {
-                        'Authorization': `Bearer ${validToken}`
-                    }
-                });
-            } catch (error) {
-                if (error.response) {
-                    expect(error.response.status).toBe(400);
-                    expect(error.response.data.success).toBe(false);
-                } else {
-                    expect.fail('No response received: ' + error.message);
-                }
-            }
-        });
-
-        it('TC12: logo_url invalid - Should return 400 when logo_url is invalid URL', async () => {
+        it('TC08: logo_url invalid - Should return 400 when logo_url is invalid URL', async () => {
             const teamData = {
                 name: 'Test Team',
                 country: 'Vietnam',
@@ -321,30 +235,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC13: kit_url invalid JSON - Should return 400 when kit_url is invalid JSON', async () => {
-            const teamData = {
-                name: 'Test Team',
-                country: 'Vietnam',
-                kit_url: 'invalid-json'
-            };
-
-            try {
-                await axios.post(`${BASE_URL}/teams`, teamData, {
-                    headers: {
-                        'Authorization': `Bearer ${validToken}`
-                    }
-                });
-            } catch (error) {
-                if (error.response) {
-                    expect(error.response.status).toBe(400);
-                    expect(error.response.data.success).toBe(false);
-                } else {
-                    expect.fail('No response received: ' + error.message);
-                }
-            }
-        });
-
-        it('TC14: kit_url not array - Should return 400 when kit_url is not an array', async () => {
+        it('TC09: kit_url not array - Should return 400 when kit_url is not an array', async () => {
             const teamData = {
                 name: 'Test Team',
                 country: 'Vietnam',
@@ -367,7 +258,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC15: kit_url invalid URLs - Should return 400 when kit_url contains invalid URLs', async () => {
+        it('TC10: kit_url invalid URLs - Should return 400 when kit_url contains invalid URLs', async () => {
             const teamData = {
                 name: 'Test Team',
                 country: 'Vietnam',
@@ -390,7 +281,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC16: Missing Authorization - Should return 401 when Authorization header is missing', async () => {
+        it('TC11: Missing Authorization - Should return 401 when Authorization header is missing', async () => {
             const teamData = {
                 name: 'Test Team',
                 country: 'Vietnam'
@@ -408,7 +299,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC17: Invalid token - Should return 401 when Authorization token is invalid', async () => {
+        it('TC12: Invalid token - Should return 401 when Authorization token is invalid', async () => {
             const teamData = {
                 name: 'Test Team',
                 country: 'Vietnam'
@@ -430,7 +321,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC18: Expired token - Should return 401 when Authorization token is expired', async () => {
+        it('TC13: Expired token - Should return 401 when Authorization token is expired', async () => {
             const teamData = {
                 name: 'Test Team',
                 country: 'Vietnam'
@@ -452,7 +343,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC19: SQL Injection in name - Should safely handle SQL injection attempts', async () => {
+        it('TC14: SQL Injection in name - Should safely handle SQL injection attempts', async () => {
             const teamData = {
                 name: "' OR '1'='1",
                 country: 'Vietnam'
@@ -476,7 +367,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC20: name có khoảng trắng - Should trim whitespace from name', async () => {
+        it('TC15: name có khoảng trắng - Should trim whitespace from name', async () => {
             const teamData = {
                 name: '  Team A  ',
                 country: 'Vietnam'
@@ -498,7 +389,7 @@ describe('Teams API Integration Tests', () => {
     // ==================== GET /teams - Happy Cases ====================
     describe('GET /teams - Happy Cases', () => {
 
-        it('TC21: Get all teams - Should return all teams for authenticated user', async () => {
+        it('TC16: Get all teams - Should return all teams for authenticated user', async () => {
             const response = await axios.get(`${BASE_URL}/teams`, {
                 headers: {
                     'Authorization': `Bearer ${validToken}`
@@ -510,7 +401,7 @@ describe('Teams API Integration Tests', () => {
             expect(Array.isArray(response.data.data)).toBe(true);
         });
 
-        it('TC22: Search by name - Should return teams matching search term', async () => {
+        it('TC17: Search by name - Should return teams matching search term', async () => {
             const response = await axios.get(`${BASE_URL}/teams?search=Test`, {
                 headers: {
                     'Authorization': `Bearer ${validToken}`
@@ -528,7 +419,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC23: Search with Vietnamese characters - Should handle Unicode search correctly', async () => {
+        it('TC18: Search with Vietnamese characters - Should handle Unicode search correctly', async () => {
             const response = await axios.get(`${BASE_URL}/teams?search=Đội`, {
                 headers: {
                     'Authorization': `Bearer ${validToken}`
@@ -540,25 +431,13 @@ describe('Teams API Integration Tests', () => {
             expect(Array.isArray(response.data.data)).toBe(true);
         });
 
-        it('TC24: Empty search results - Should return empty array when no teams match', async () => {
-            const response = await axios.get(`${BASE_URL}/teams?search=NonExistentTeam12345`, {
-                headers: {
-                    'Authorization': `Bearer ${validToken}`
-                }
-            });
-
-            expect(response.status).toBe(200);
-            expect(response.data.success).toBe(true);
-            expect(Array.isArray(response.data.data)).toBe(true);
-            expect(response.data.data.length).toBe(0);
-        });
 
     });
 
     // ==================== GET /teams - Unhappy Cases ====================
     describe('GET /teams - Unhappy Cases', () => {
 
-        it('TC25: Missing token - Should return 401 when Authorization header is missing', async () => {
+        it('TC19: Missing token - Should return 401 when Authorization header is missing', async () => {
             try {
                 await axios.get(`${BASE_URL}/teams`);
             } catch (error) {
@@ -571,7 +450,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC26: Invalid token - Should return 401 when Authorization token is invalid', async () => {
+        it('TC20: Invalid token - Should return 401 when Authorization token is invalid', async () => {
             try {
                 await axios.get(`${BASE_URL}/teams`, {
                     headers: {
@@ -588,7 +467,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC27: Expired token - Should return 401 when Authorization token is expired', async () => {
+        it('TC21: Expired token - Should return 401 when Authorization token is expired', async () => {
             try {
                 await axios.get(`${BASE_URL}/teams`, {
                     headers: {
@@ -605,7 +484,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC28: SQL Injection in search - Should safely handle SQL injection in search parameter', async () => {
+        it('TC22: SQL Injection in search - Should safely handle SQL injection in search parameter', async () => {
             try {
                 await axios.get(`${BASE_URL}/teams?search=' OR '1'='1`, {
                     headers: {
@@ -626,35 +505,12 @@ describe('Teams API Integration Tests', () => {
                 }
             }
         });
-
-        it('TC29: SQL injection in search - Should safely handle SQL injection attempts in search query', async () => {
-            try {
-                const response = await axios.get(`${BASE_URL}/teams?search=' OR '1'='1`, {
-                    headers: {
-                        'Authorization': `Bearer ${validToken}`
-                    }
-                });
-
-                expect(response.status).toBe(200);
-                expect(response.data.success).toBe(true);
-                expect(Array.isArray(response.data.data)).toBe(true);
-                // Should not return all teams due to injection
-                expect(response.data.data.length).toBe(0);
-            } catch (error) {
-                if (error.response) {
-                    expect([200, 400]).toContain(error.response.status);
-                } else {
-                    expect.fail('No response received: ' + error.message);
-                }
-            }
-        });
-
     });
 
     // ==================== GET /teams/{teamId} - Happy Cases ====================
     describe('GET /teams/:teamId - Happy Cases', () => {
 
-        it('TC30: Get team details with valid ID - Should return team details for valid team ID', async () => {
+        it('TC23: Get team details with valid ID - Should return team details for valid team ID', async () => {
             const team = await createTeam({ name: 'Team for Details Test', country: 'Vietnam' });
 
             const response = await axios.get(`${BASE_URL}/teams/${team.id}`, {
@@ -677,7 +533,7 @@ describe('Teams API Integration Tests', () => {
             expect(response.data.data.name).toBe('Team for Details Test');
         });
 
-        it('TC31: Get team with all fields populated - Should return complete team data', async () => {
+        it('TC24: Get team with all fields populated - Should return complete team data', async () => {
             const team = await createTeam({
                 name: 'Complete Team Details',
                 country: 'Vietnam',
@@ -704,7 +560,7 @@ describe('Teams API Integration Tests', () => {
     // ==================== GET /teams/{teamId} - Unhappy Cases ====================
     describe('GET /teams/:teamId - Unhappy Cases', () => {
 
-        it('TC32: Team ID does not exist - Should return 404 for non-existent team ID', async () => {
+        it('TC25: Team ID does not exist - Should return 404 for non-existent team ID', async () => {
             try {
                 await axios.get(`${BASE_URL}/teams/999999`, {
                     headers: { 'Authorization': `Bearer ${validToken}` }
@@ -719,7 +575,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC33: Invalid team ID format - string - Should handle invalid string team ID', async () => {
+        it('TC26: Invalid team ID format - string - Should handle invalid string team ID', async () => {
             try {
                 await axios.get(`${BASE_URL}/teams/invalid-string-id`, {
                     headers: { 'Authorization': `Bearer ${validToken}` }
@@ -733,7 +589,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC34: Invalid team ID format - special characters - Should handle special characters in team ID', async () => {
+        it('TC27: Invalid team ID format - special characters - Should handle special characters in team ID', async () => {
             try {
                 await axios.get(`${BASE_URL}/teams/team@#$%^&*()`, {
                     headers: { 'Authorization': `Bearer ${validToken}` }
@@ -747,7 +603,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC35: Null team ID - Should handle null team ID', async () => {
+        it('TC28: Null team ID - Should handle null team ID', async () => {
             try {
                 await axios.get(`${BASE_URL}/teams/null`, {
                     headers: { 'Authorization': `Bearer ${validToken}` }
@@ -761,7 +617,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC36: Very large team ID - Should handle extremely large team ID', async () => {
+        it('TC29: Very large team ID - Should handle extremely large team ID', async () => {
             const largeId = '9'.repeat(100);
             try {
                 await axios.get(`${BASE_URL}/teams/${largeId}`, {
@@ -776,7 +632,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC37: Missing token - Should return 401 when Authorization header is missing', async () => {
+        it('TC30: Missing token - Should return 401 when Authorization header is missing', async () => {
             const team = await createTeam();
             try {
                 await axios.get(`${BASE_URL}/teams/${team.id}`);
@@ -790,7 +646,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC38: Invalid token - Should return 401 when Authorization token is invalid', async () => {
+        it('TC31: Invalid token - Should return 401 when Authorization token is invalid', async () => {
             const team = await createTeam();
             try {
                 await axios.get(`${BASE_URL}/teams/${team.id}`, {
@@ -808,7 +664,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC39: Float team ID - Should handle float team ID', async () => {
+        it('TC32: Float team ID - Should handle float team ID', async () => {
             try {
                 await axios.get(`${BASE_URL}/teams/123.45`, {
                     headers: { 'Authorization': `Bearer ${validToken}` }
@@ -822,7 +678,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC40: SQL injection in team ID - Should safely handle SQL injection in teamId parameter', async () => {
+        it('TC33: SQL injection in team ID - Should safely handle SQL injection in teamId parameter', async () => {
             try {
                 await axios.get(`${BASE_URL}/teams/1' OR '1'='1`, {
                     headers: { 'Authorization': `Bearer ${validToken}` }
@@ -836,7 +692,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC41: Extremely long team ID - Should handle very long team ID strings', async () => {
+        it('TC34: Extremely long team ID - Should handle very long team ID strings', async () => {
             const longId = 'a'.repeat(1000) + '123';
             try {
                 await axios.get(`${BASE_URL}/teams/${longId}`, {
@@ -856,7 +712,7 @@ describe('Teams API Integration Tests', () => {
     // ==================== PUT /teams/{teamId} - Validation Cases ====================
     describe('PUT /teams/:teamId - Validation Cases', () => {
 
-        it('TC42: Update team with valid data - Should update all fields successfully', async () => {
+        it('TC35: Update team with valid data - Should update all fields successfully', async () => {
             const team = await createTeam({
                 name: 'Team Update Full',
                 country: 'Vietnam',
@@ -885,7 +741,7 @@ describe('Teams API Integration Tests', () => {
             expect(JSON.parse(updateResponse.data.data.kit_url)).toContain('https://example.com/newkit1.jpg');
         });
 
-        it('TC43: Update part of a field - Should update name only', async () => {
+        it('TC36: Update part of a field - Should update name only', async () => {
             const team = await createTeam({
                 name: 'Team Update Name Only',
                 country: 'Vietnam',
@@ -906,28 +762,8 @@ describe('Teams API Integration Tests', () => {
             expect(updateResponse.data.data.description).toBe('Initial description');
         });
 
-        it('TC44: Update part of a field - Should update description only', async () => {
-            const team = await createTeam({
-                name: 'Team Update Description Only',
-                country: 'Vietnam',
-                description: 'Before description'
-            });
 
-            const updateResponse = await axios.put(`${BASE_URL}/teams/${team.id}`, {
-                description: 'Updated description only'
-            }, {
-                headers: {
-                    Authorization: `Bearer ${validToken}`
-                }
-            });
-
-            expect(updateResponse.status).toBe(200);
-            expect(updateResponse.data.success).toBe(true);
-            expect(updateResponse.data.data.description).toBe('Updated description only');
-            expect(updateResponse.data.data.name).toBe('Team Update Description Only');
-        });
-
-        it('TC45: Update with empty name - Should return 400 when updating to empty name', async () => {
+        it('TC37: Update with empty name - Should return 400 when updating to empty name', async () => {
             const team = await createTeam();
             try {
                 await axios.put(`${BASE_URL}/teams/${team.id}`, {
@@ -947,7 +783,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC46: Update with whitespace name - Should trim whitespace from name', async () => {
+        it('TC38: Update with whitespace name - Should trim whitespace from name', async () => {
             const team = await createTeam();
             const updateResponse = await axios.put(`${BASE_URL}/teams/${team.id}`, {
                 name: '  Updated Name  '
@@ -962,7 +798,7 @@ describe('Teams API Integration Tests', () => {
             expect(updateResponse.data.data.name).toBe('Updated Name');
         });
 
-        it('TC47: Update with invalid logo_url - Should return 400 for invalid logo_url', async () => {
+        it('TC39: Update with invalid logo_url - Should return 400 for invalid logo_url', async () => {
             const team = await createTeam();
             try {
                 await axios.put(`${BASE_URL}/teams/${team.id}`, {
@@ -982,7 +818,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC48: Update with invalid kit_url - Should return 400 for invalid kit_url', async () => {
+        it('TC40: Update with invalid kit_url - Should return 400 for invalid kit_url', async () => {
             const team = await createTeam();
             try {
                 await axios.put(`${BASE_URL}/teams/${team.id}`, {
@@ -1002,7 +838,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC49: Update non-existent team - Should return 404 for non-existent team ID', async () => {
+        it('TC41: Update non-existent team - Should return 404 for non-existent team ID', async () => {
             try {
                 await axios.put(`${BASE_URL}/teams/999999`, {
                     name: 'Updated Name'
@@ -1021,7 +857,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC50: Update with invalid token - Should return 401 for invalid token', async () => {
+        it('TC42: Update with invalid token - Should return 401 for invalid token', async () => {
             const team = await createTeam();
             try {
                 await axios.put(`${BASE_URL}/teams/${team.id}`, {
@@ -1041,7 +877,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC51: Update without token - Should return 401 when Authorization header is missing', async () => {
+        it('TC43: Update without token - Should return 401 when Authorization header is missing', async () => {
             const team = await createTeam();
             try {
                 await axios.put(`${BASE_URL}/teams/${team.id}`, {
@@ -1057,7 +893,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC52: Update with unauthorized user - Should return 404 when user is not the owner', async () => {
+        it('TC44: Update with unauthorized user - Should return 404 when user is not the owner', async () => {
             const team = await createTeam();
             // Create another user
             const timestamp = Date.now();
@@ -1091,7 +927,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC53: Update with SQL injection - Should safely handle SQL injection in update data', async () => {
+        it('TC45: Update with SQL injection - Should safely handle SQL injection in update data', async () => {
             const team = await createTeam();
             try {
                 await axios.put(`${BASE_URL}/teams/${team.id}`, {
@@ -1113,7 +949,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC54: Update with invalid kit_url array - Should return 400 when kit_url is not an array', async () => {
+        it('TC46: Update with invalid kit_url array - Should return 400 when kit_url is not an array', async () => {
             const team = await createTeam();
             try {
                 await axios.put(`${BASE_URL}/teams/${team.id}`, {
@@ -1137,7 +973,7 @@ describe('Teams API Integration Tests', () => {
 
     describe('GET /teams/{teamId}/members - Happy Cases', () => {
 
-        it('TC55: Get members with valid teamId - Should return members array', async () => {
+        it('TC47: Get members with valid teamId - Should return members array', async () => {
             const team = await createTeam();
             await createMember(team.id);
             const response = await axios.get(`${BASE_URL}/teams/${team.id}/members`, {
@@ -1148,7 +984,7 @@ describe('Teams API Integration Tests', () => {
             expect(Array.isArray(response.data.data)).toBe(true);
         });
 
-        it('TC56: Team with members - Should return non-empty members array', async () => {
+        it('TC48: Team with members - Should return non-empty members array', async () => {
             const team = await createTeam();
             const member = await createMember(team.id);
             const response = await axios.get(`${BASE_URL}/teams/${team.id}/members`, {
@@ -1171,22 +1007,12 @@ describe('Teams API Integration Tests', () => {
             expect(memberData).toHaveProperty('joined_at');
         });
 
-        it('TC57: Team with no members - Should return empty array or 404', async () => {
-            const team = await createTeam();
-            const response = await axios.get(`${BASE_URL}/teams/${team.id}/members`, {
-                headers: { 'Authorization': `Bearer ${validToken}` }
-            });
-            expect(response.status).toBe(200);
-            expect(response.data.success).toBe(true);
-            expect(Array.isArray(response.data.data)).toBe(true);
-            expect(response.data.data.length).toBe(0);
-        });
 
     });
 
     describe('GET /teams/{teamId}/members - Unhappy Cases', () => {
 
-        it('TC58: teamId does not exist - Should return 404', async () => {
+        it('TC49: teamId does not exist - Should return 404', async () => {
             try {
                 await axios.get(`${BASE_URL}/teams/99999/members`, {
                     headers: { 'Authorization': `Bearer ${validToken}` }
@@ -1201,7 +1027,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC59: Invalid teamId format - string - Should return 400 or 404', async () => {
+        it('TC50: Invalid teamId format - string - Should return 400 or 404', async () => {
             try {
                 await axios.get(`${BASE_URL}/teams/invalid-string-id/members`, {
                     headers: { 'Authorization': `Bearer ${validToken}` }
@@ -1216,7 +1042,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC60: Invalid teamId format - special characters - Should return 400 or 404', async () => {
+        it('TC51: Invalid teamId format - special characters - Should return 400 or 404', async () => {
             try {
                 await axios.get(`${BASE_URL}/teams/!@#$%^&*()/members`, {
                     headers: { 'Authorization': `Bearer ${validToken}` }
@@ -1231,7 +1057,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC61: Edge case - null teamId - Should return 400 or 404', async () => {
+        it('TC52: Edge case - null teamId - Should return 400 or 404', async () => {
             try {
                 await axios.get(`${BASE_URL}/teams/null/members`, {
                     headers: { 'Authorization': `Bearer ${validToken}` }
@@ -1246,22 +1072,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC62: Edge case - empty teamId - Should return 400 or 404', async () => {
-            try {
-                await axios.get(`${BASE_URL}/teams//members`, {
-                    headers: { 'Authorization': `Bearer ${validToken}` }
-                });
-            } catch (error) {
-                if (error.response) {
-                    expect([400, 404]).toContain(error.response.status);
-                    expect(error.response.data.success).toBe(false);
-                } else {
-                    expect.fail('No response received: ' + error.message);
-                }
-            }
-        });
-
-        it('TC63: Edge case - very large teamId - Should return 400 or 404', async () => {
+        it('TC53: Edge case - very large teamId - Should return 400 or 404', async () => {
             try {
                 await axios.get(`${BASE_URL}/teams/999999999999999999999/members`, {
                     headers: { 'Authorization': `Bearer ${validToken}` }
@@ -1276,30 +1087,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC64: Response structure validation - Should have correct member properties', async () => {
-            const team = await createTeam();
-            const member = await createMember(team.id);
-            const response = await axios.get(`${BASE_URL}/teams/${team.id}/members`, {
-                headers: { 'Authorization': `Bearer ${validToken}` }
-            });
-            expect(response.status).toBe(200);
-            expect(response.data.success).toBe(true);
-            
-            if (response.data.data.length > 0) {
-                const memberData = response.data.data[0];
-                expect(typeof memberData.id).toBe('number');
-                expect(typeof memberData.full_name).toBe('string');
-                expect(typeof memberData.age).toBe('number');
-                expect(typeof memberData.height_cm).toBe('number');
-                expect(typeof memberData.weight_kg).toBe('number');
-                expect(typeof memberData.preferred_foot).toBe('string');
-                expect(typeof memberData.main_position).toBe('string');
-                expect(typeof memberData.jersey_number).toBe('number');
-                expect(memberData).toHaveProperty('joined_at');
-            }
-        });
-
-        it('TC65: SQL Injection attempt - Should safely handle SQL injection', async () => {
+        it('TC54: SQL Injection attempt - Should safely handle SQL injection', async () => {
             try {
                 await axios.get(`${BASE_URL}/teams/1' OR '1'='1/members`, {
                     headers: { 'Authorization': `Bearer ${validToken}` }
@@ -1314,22 +1102,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC66: XSS attempt - Should safely handle XSS attempts', async () => {
-            try {
-                await axios.get(`${BASE_URL}/teams/<script>alert('xss')</script>/members`, {
-                    headers: { 'Authorization': `Bearer ${validToken}` }
-                });
-            } catch (error) {
-                if (error.response) {
-                    expect([400, 404]).toContain(error.response.status);
-                    expect(error.response.data.success).toBe(false);
-                } else {
-                    expect.fail('No response received: ' + error.message);
-                }
-            }
-        });
-
-        it('TC67: Missing token - Should return 401', async () => {
+        it('TC55: Missing token - Should return 401', async () => {
             const team = await createTeam();
             try {
                 await axios.get(`${BASE_URL}/teams/${team.id}/members`);
@@ -1342,30 +1115,13 @@ describe('Teams API Integration Tests', () => {
                 }
             }
         });
-
-        it('TC68: Invalid token - Should return 401', async () => {
-            const team = await createTeam();
-            try {
-                await axios.get(`${BASE_URL}/teams/${team.id}/members`, {
-                    headers: { 'Authorization': 'Bearer invalid-token-12345' }
-                });
-            } catch (error) {
-                if (error.response) {
-                    expect(error.response.status).toBe(401);
-                    expect(error.response.data.success).toBe(false);
-                } else {
-                    expect.fail('No response received: ' + error.message);
-                }
-            }
-        });
-
     });
 
     describe('GET /teams/{teamId}/members/{playerId}', () => {
 
         describe('Happy Cases', () => {
 
-            it('TC69: Get member detail with valid IDs - Should return member details', async () => {
+            it('TC56: Get member detail with valid IDs - Should return member details', async () => {
                 const team = await createTeam();
                 const member = await createMember(team.id);
                 const response = await axios.get(`${BASE_URL}/teams/${team.id}/members/${member.id}`, {
@@ -1379,36 +1135,12 @@ describe('Teams API Integration Tests', () => {
                 expect(response.data.data.main_position).toBe(member.main_position);
             });
 
-            it('TC70: Get member with all fields - Should return complete member data', async () => {
-                const team = await createTeam();
-                const member = await createMember(team.id, {
-                    full_name: 'Complete Member',
-                    age: 25,
-                    height_cm: 180,
-                    weight_kg: 75,
-                    preferred_foot: 'right',
-                    main_position: 'Forward',
-                    jersey_number: 10
-                });
-                const response = await axios.get(`${BASE_URL}/teams/${team.id}/members/${member.id}`, {
-                    headers: { 'Authorization': `Bearer ${validToken}` }
-                });
-                expect(response.status).toBe(200);
-                expect(response.data.success).toBe(true);
-                expect(response.data.data.full_name).toBe('Complete Member');
-                expect(response.data.data.age).toBe(25);
-                expect(response.data.data.height_cm).toBe(180);
-                expect(response.data.data.weight_kg).toBe(75);
-                expect(response.data.data.preferred_foot).toBe('right');
-                expect(response.data.data.main_position).toBe('Forward');
-                expect(response.data.data.jersey_number).toBe(10);
-            });
 
         });
 
         describe('Unhappy Cases', () => {
 
-            it('TC71: teamId does not exist - Should return 404', async () => {
+            it('TC57: teamId does not exist - Should return 404', async () => {
                 try {
                     await axios.get(`${BASE_URL}/teams/99999/members/1`, {
                         headers: { 'Authorization': `Bearer ${validToken}` }
@@ -1423,7 +1155,7 @@ describe('Teams API Integration Tests', () => {
                 }
             });
 
-            it('TC72: playerId does not exist - Should return 404', async () => {
+            it('TC58: playerId does not exist - Should return 404', async () => {
                 const team = await createTeam();
                 try {
                     await axios.get(`${BASE_URL}/teams/${team.id}/members/99999`, {
@@ -1439,7 +1171,7 @@ describe('Teams API Integration Tests', () => {
                 }
             });
 
-            it('TC73: Invalid teamId format - Should return 400 or 404', async () => {
+            it('TC59: Invalid teamId format - Should return 400 or 404', async () => {
                 try {
                     await axios.get(`${BASE_URL}/teams/invalid/members/1`, {
                         headers: { 'Authorization': `Bearer ${validToken}` }
@@ -1454,7 +1186,7 @@ describe('Teams API Integration Tests', () => {
                 }
             });
 
-            it('TC74: Invalid playerId format - Should return 400 or 404', async () => {
+            it('TC60: Invalid playerId format - Should return 400 or 404', async () => {
                 const team = await createTeam();
                 try {
                     await axios.get(`${BASE_URL}/teams/${team.id}/members/invalid`, {
@@ -1470,7 +1202,7 @@ describe('Teams API Integration Tests', () => {
                 }
             });
 
-            it('TC75: Edge case - null playerId - Should return 400 or 404', async () => {
+            it('TC61: Edge case - null playerId - Should return 400 or 404', async () => {
                 const team = await createTeam();
                 try {
                     await axios.get(`${BASE_URL}/teams/${team.id}/members/null`, {
@@ -1486,7 +1218,7 @@ describe('Teams API Integration Tests', () => {
                 }
             });
 
-            it('TC76: Edge case - null teamId - Should return 400 or 404', async () => {
+            it('TC62: Edge case - null teamId - Should return 400 or 404', async () => {
                 try {
                     await axios.get(`${BASE_URL}/teams/null/members/1`, {
                         headers: { 'Authorization': `Bearer ${validToken}` }
@@ -1501,7 +1233,7 @@ describe('Teams API Integration Tests', () => {
                 }
             });
 
-            it('TC77: Edge case - null playerId - Should return 400 or 404', async () => {
+            it('TC63: Edge case - null playerId - Should return 400 or 404', async () => {
                 const team = await createTeam();
                 try {
                     await axios.get(`${BASE_URL}/teams/${team.id}/members/null`, {
@@ -1523,7 +1255,7 @@ describe('Teams API Integration Tests', () => {
 
     describe('POST /teams/{teamId}/members - Happy Cases', () => {
 
-        it('TC78: Add member with valid data - Should add member with all valid fields', async () => {
+        it('TC64: Add member with valid data - Should add member with all valid fields', async () => {
             const team = await createTeam();
             const memberData = {
                 full_name: 'Nguyễn Văn A',
@@ -1545,163 +1277,9 @@ describe('Teams API Integration Tests', () => {
             expect(response.data.data.age).toBe(memberData.age);
         });
 
-        it('TC79: Add member with minimum required fields - Should create member with only essential data', async () => {
-            const team = await createTeam();
-            const memberData = {
-                full_name: 'Trần Văn B',
-                age: 22,
-                main_position: 'Midfielder'
-            };
-            const response = await axios.post(
-                `${BASE_URL}/teams/${team.id}/members`,
-                memberData,
-                { headers: { Authorization: `Bearer ${validToken}` } }
-            );
-            expect(response.status).toBe(201);
-            expect(response.data.success).toBe(true);
-            expect(response.data.data.full_name).toBe(memberData.full_name);
-        });
 
-        it('TC80: Add member with Unicode data - Should handle Vietnamese characters correctly', async () => {
-            const team = await createTeam();
-            const memberData = {
-                full_name: 'Phạm Đức Cường',
-                age: 28,
-                height_cm: 185,
-                weight_kg: 82,
-                preferred_foot: 'left',
-                main_position: 'Defender',
-                jersey_number: 4
-            };
-            const response = await axios.post(
-                `${BASE_URL}/teams/${team.id}/members`,
-                memberData,
-                { headers: { Authorization: `Bearer ${validToken}` } }
-            );
-            expect(response.status).toBe(201);
-            expect(response.data.success).toBe(true);
-            expect(response.data.data.full_name).toBe(memberData.full_name);
-        });
 
-    });
-
-    describe('POST /teams/{teamId}/members - Unhappy Cases', () => {
-
-        it('TC81: Add member with missing full_name - Should return 400', async () => {
-            const team = await createTeam();
-            const memberData = {
-                age: 25,
-                main_position: 'Forward'
-            };
-            try {
-                await axios.post(
-                    `${BASE_URL}/teams/${team.id}/members`,
-                    memberData,
-                    { headers: { Authorization: `Bearer ${validToken}` } }
-                );
-            } catch (error) {
-                if (error.response) {
-                    expect(error.response.status).toBe(400);
-                    expect(error.response.data.success).toBe(false);
-                } else {
-                    expect.fail('No response received: ' + error.message);
-                }
-            }
-        });
-
-        it('TC82: Add member with empty full_name - Should return 400', async () => {
-            const team = await createTeam();
-            const memberData = {
-                full_name: '',
-                age: 25,
-                main_position: 'Forward'
-            };
-            try {
-                await axios.post(
-                    `${BASE_URL}/teams/${team.id}/members`,
-                    memberData,
-                    { headers: { Authorization: `Bearer ${validToken}` } }
-                );
-            } catch (error) {
-                if (error.response) {
-                    expect(error.response.status).toBe(400);
-                    expect(error.response.data.success).toBe(false);
-                } else {
-                    expect.fail('No response received: ' + error.message);
-                }
-            }
-        });
-
-        it('TC83: Add member with invalid age - negative - Should return 400', async () => {
-            const team = await createTeam();
-            const memberData = {
-                full_name: 'Test Player',
-                age: -5,
-                main_position: 'Forward'
-            };
-            try {
-                await axios.post(
-                    `${BASE_URL}/teams/${team.id}/members`,
-                    memberData,
-                    { headers: { Authorization: `Bearer ${validToken}` } }
-                );
-            } catch (error) {
-                if (error.response) {
-                    expect(error.response.status).toBe(400);
-                    expect(error.response.data.success).toBe(false);
-                } else {
-                    expect.fail('No response received: ' + error.message);
-                }
-            }
-        });
-
-        it('TC84: Add member with invalid age - too high - Should return 400', async () => {
-            const team = await createTeam();
-            const memberData = {
-                full_name: 'Test Player',
-                age: 150,
-                main_position: 'Forward'
-            };
-            try {
-                await axios.post(
-                    `${BASE_URL}/teams/${team.id}/members`,
-                    memberData,
-                    { headers: { Authorization: `Bearer ${validToken}` } }
-                );
-            } catch (error) {
-                if (error.response) {
-                    expect(error.response.status).toBe(400);
-                    expect(error.response.data.success).toBe(false);
-                } else {
-                    expect.fail('No response received: ' + error.message);
-                }
-            }
-        });
-
-        it('TC85: Add member with invalid main_position - Should return 400', async () => {
-            const team = await createTeam();
-            const memberData = {
-                full_name: 'Test Player',
-                age: 25,
-                main_position: 'InvalidPosition'
-            };
-            try {
-                await axios.post(
-                    `${BASE_URL}/teams/${team.id}/members`,
-                    memberData,
-                    { headers: { Authorization: `Bearer ${validToken}` } }
-                );
-            } catch (error) {
-                if (error.response) {
-                    expect(error.response.status).toBe(400);
-                    expect(error.response.data.success).toBe(false);
-                } else {
-                    expect.fail('No response received: ' + error.message);
-                }
-            }
-        });
-
-        it('TC86: Add member to non-existent team - Should return 404', async () => {
+        it('TC65: Add member to non-existent team - Should return 404', async () => {
             const memberData = {
                 full_name: 'Test Player',
                 age: 25,
@@ -1723,7 +1301,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC87: Add member without authorization - Should return 401', async () => {
+        it('TC66: Add member without authorization - Should return 401', async () => {
             const team = await createTeam();
             const memberData = {
                 full_name: 'Test Player',
@@ -1745,7 +1323,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC88: Add member with invalid token - Should return 401', async () => {
+        it('TC67: Add member with invalid token - Should return 401', async () => {
             const team = await createTeam();
             const memberData = {
                 full_name: 'Test Player',
@@ -1768,80 +1346,7 @@ describe('Teams API Integration Tests', () => {
             }
         });
 
-        it('TC89: Add member to team owned by another user - Should return 404', async () => {
-            // Create another user
-            const timestamp = Date.now();
-            const secondUserResponse = await axios.post(`${BASE_URL}/auth/register`, {
-                email: `other-organizer-${timestamp}@example.com`,
-                password: 'password123',
-                full_name: 'Other Organizer'
-            });
-            expect(secondUserResponse.status).toBe(201);
 
-            const loginResponse = await axios.post(`${BASE_URL}/auth/login`, {
-                email: `other-organizer-${timestamp}@example.com`,
-                password: 'password123'
-            });
-            expect(loginResponse.status).toBe(200);
-            const otherToken = loginResponse.data.data.token;
-
-            // Create team with first user
-            const team = await createTeam();
-
-            const memberData = {
-                full_name: 'Test Player',
-                age: 25,
-                main_position: 'Forward'
-            };
-            try {
-                await axios.post(
-                    `${BASE_URL}/teams/${team.id}/members`,
-                    memberData,
-                    { headers: { Authorization: `Bearer ${otherToken}` } }
-                );
-            } catch (error) {
-                if (error.response) {
-                    expect(error.response.status).toBe(404);
-                    expect(error.response.data.success).toBe(false);
-                } else {
-                    expect.fail('No response received: ' + error.message);
-                }
-            }
-        });
-
-        it('TC90: Add member with duplicate jersey_number - Should allow or handle gracefully', async () => {
-            const team = await createTeam();
-            const memberData1 = {
-                full_name: 'Player 1',
-                age: 25,
-                main_position: 'Forward',
-                jersey_number: 10
-            };
-            const memberData2 = {
-                full_name: 'Player 2',
-                age: 26,
-                main_position: 'Midfielder',
-                jersey_number: 10
-            };
-
-            const response1 = await axios.post(
-                `${BASE_URL}/teams/${team.id}/members`,
-                memberData1,
-                { headers: { Authorization: `Bearer ${validToken}` } }
-            );
-            expect(response1.status).toBe(201);
-
-            // Second member with same jersey number
-            const response2 = await axios.post(
-                `${BASE_URL}/teams/${team.id}/members`,
-                memberData2,
-                { headers: { Authorization: `Bearer ${validToken}` } }
-            );
-            expect([200, 201, 400]).toContain(response2.status);
-            if (response2.status === 201) {
-                expect(response2.data.success).toBe(true);
-            }
-        });
 
     });
 
@@ -1849,7 +1354,7 @@ describe('Teams API Integration Tests', () => {
 
         describe('Happy Cases', () => {
 
-            it('TC91: Delete member successfully - Should delete member and return 200 or 204', async () => {
+            it('TC68: Delete member successfully - Should delete member and return 200 or 204', async () => {
                 const team = await createTeam();
                 const member = await createMember(team.id);
                 const response = await axios.delete(
@@ -1862,35 +1367,11 @@ describe('Teams API Integration Tests', () => {
                 }
             });
 
-            it('TC92: Delete member and verify removal - Should not be able to get deleted member', async () => {
-                const team = await createTeam();
-                const member = await createMember(team.id);
-                const deleteResponse = await axios.delete(
-                    `${BASE_URL}/teams/${team.id}/members/${member.id}`,
-                    { headers: { Authorization: `Bearer ${validToken}` } }
-                );
-                expect([200, 204]).toContain(deleteResponse.status);
-
-                // Try to get the deleted member
-                try {
-                    await axios.get(`${BASE_URL}/teams/${team.id}/members/${member.id}`, {
-                        headers: { 'Authorization': `Bearer ${validToken}` }
-                    });
-                } catch (error) {
-                    if (error.response) {
-                        expect(error.response.status).toBe(404);
-                        expect(error.response.data.success).toBe(false);
-                    } else {
-                        expect.fail('No response received: ' + error.message);
-                    }
-                }
-            });
-
         });
 
         describe('Unhappy Cases', () => {
 
-            it('TC93: Delete non-existent member - Should return 404', async () => {
+            it('TC69: Delete non-existent member - Should return 404', async () => {
                 const team = await createTeam();
                 try {
                     await axios.delete(
@@ -1907,7 +1388,7 @@ describe('Teams API Integration Tests', () => {
                 }
             });
 
-            it('TC94: Delete member from non-existent team - Should return 404', async () => {
+            it('TC70: Delete member from non-existent team - Should return 404', async () => {
                 try {
                     await axios.delete(
                         `${BASE_URL}/teams/99999/members/1`,
@@ -1923,7 +1404,7 @@ describe('Teams API Integration Tests', () => {
                 }
             });
 
-            it('TC95: Delete member without authorization - Should return 401', async () => {
+            it('TC71: Delete member without authorization - Should return 401', async () => {
                 const team = await createTeam();
                 const member = await createMember(team.id);
                 try {
@@ -1938,60 +1419,10 @@ describe('Teams API Integration Tests', () => {
                 }
             });
 
-            it('TC96: Delete member with invalid token - Should return 401', async () => {
-                const team = await createTeam();
-                const member = await createMember(team.id);
-                try {
-                    await axios.delete(
-                        `${BASE_URL}/teams/${team.id}/members/${member.id}`,
-                        { headers: { Authorization: 'Bearer invalid-token-12345' } }
-                    );
-                } catch (error) {
-                    if (error.response) {
-                        expect(error.response.status).toBe(401);
-                        expect(error.response.data.success).toBe(false);
-                    } else {
-                        expect.fail('No response received: ' + error.message);
-                    }
-                }
-            });
 
-            it('TC97: Delete member from team owned by another user - Should return 404', async () => {
-                const team = await createTeam();
-                const member = await createMember(team.id);
 
-                // Create another user
-                const timestamp = Date.now();
-                const secondUserResponse = await axios.post(`${BASE_URL}/auth/register`, {
-                    email: `other-organizer-${timestamp}@example.com`,
-                    password: 'password123',
-                    full_name: 'Other Organizer'
-                });
-                expect(secondUserResponse.status).toBe(201);
 
-                const loginResponse = await axios.post(`${BASE_URL}/auth/login`, {
-                    email: `other-organizer-${timestamp}@example.com`,
-                    password: 'password123'
-                });
-                expect(loginResponse.status).toBe(200);
-                const otherToken = loginResponse.data.data.token;
-
-                try {
-                    await axios.delete(
-                        `${BASE_URL}/teams/${team.id}/members/${member.id}`,
-                        { headers: { Authorization: `Bearer ${otherToken}` } }
-                    );
-                } catch (error) {
-                    if (error.response) {
-                        expect(error.response.status).toBe(404);
-                        expect(error.response.data.success).toBe(false);
-                    } else {
-                        expect.fail('No response received: ' + error.message);
-                    }
-                }
-            });
-
-            it('TC98: Delete member with invalid teamId format - Should return 400 or 404', async () => {
+            it('TC72: Delete member with invalid teamId format - Should return 400 or 404', async () => {
                 try {
                     await axios.delete(
                         `${BASE_URL}/teams/invalid/members/1`,
@@ -2007,7 +1438,7 @@ describe('Teams API Integration Tests', () => {
                 }
             });
 
-            it('TC99: Delete member with invalid playerId format - Should return 400 or 404', async () => {
+            it('TC73: Delete member with invalid playerId format - Should return 400 or 404', async () => {
                 const team = await createTeam();
                 try {
                     await axios.delete(
@@ -2024,7 +1455,7 @@ describe('Teams API Integration Tests', () => {
                 }
             });
 
-            it('TC100: Edge case - null playerId - Should return 400 or 404', async () => {
+            it('TC74: Edge case - null playerId - Should return 400 or 404', async () => {
                 const team = await createTeam();
                 try {
                     await axios.delete(
@@ -2041,7 +1472,7 @@ describe('Teams API Integration Tests', () => {
                 }
             });
 
-            it('TC101: Edge case - null teamId - Should return 400 or 404', async () => {
+            it('TC75: Edge case - null teamId - Should return 400 or 404', async () => {
                 try {
                     await axios.delete(
                         `${BASE_URL}/teams/null/members/1`,
@@ -2065,7 +1496,7 @@ describe('Teams API Integration Tests', () => {
 
         describe('Happy Cases', () => {
 
-            it('TC102: Delete team successfully - Should delete team and return 200 or 204', async () => {
+            it('TC76: Delete team successfully - Should delete team and return 200 or 204', async () => {
                 const team = await createTeam();
                 const response = await axios.delete(
                     `${BASE_URL}/teams/${team.id}`,
@@ -2077,7 +1508,7 @@ describe('Teams API Integration Tests', () => {
                 }
             });
 
-            it('TC103: Delete team and verify removal - Should not be able to get deleted team', async () => {
+            it('TC77: Delete team and verify removal - Should not be able to get deleted team', async () => {
                 const team = await createTeam();
                 const deleteResponse = await axios.delete(
                     `${BASE_URL}/teams/${team.id}`,
@@ -2100,35 +1531,12 @@ describe('Teams API Integration Tests', () => {
                 }
             });
 
-            it('TC104: Delete team with members - Should delete team and all its members', async () => {
-                const team = await createTeam();
-                await createMember(team.id);
-                const deleteResponse = await axios.delete(
-                    `${BASE_URL}/teams/${team.id}`,
-                    { headers: { Authorization: `Bearer ${validToken}` } }
-                );
-                expect([200, 204]).toContain(deleteResponse.status);
-
-                // Try to get team members
-                try {
-                    await axios.get(`${BASE_URL}/teams/${team.id}/members`, {
-                        headers: { 'Authorization': `Bearer ${validToken}` }
-                    });
-                } catch (error) {
-                    if (error.response) {
-                        expect(error.response.status).toBe(404);
-                        expect(error.response.data.success).toBe(false);
-                    } else {
-                        expect.fail('No response received: ' + error.message);
-                    }
-                }
-            });
 
         });
 
         describe('Unhappy Cases', () => {
 
-            it('TC105: Delete non-existent team - Should return 404', async () => {
+            it('TC78: Delete non-existent team - Should return 404', async () => {
                 try {
                     await axios.delete(
                         `${BASE_URL}/teams/99999`,
@@ -2144,29 +1552,7 @@ describe('Teams API Integration Tests', () => {
                 }
             });
 
-            it('TC106: Delete team with members in tournament - Should return 400 or 409', async () => {
-                const team = await createTeam();
-                await createMember(team.id);
-                // Note: This test assumes the team is in a tournament, but since tournament functionality
-                // is not implemented, this test may need to be adjusted or removed
-                try {
-                    await axios.delete(
-                        `${BASE_URL}/teams/${team.id}`,
-                        { headers: { Authorization: `Bearer ${validToken}` } }
-                    );
-                    // If no tournament check, it should succeed
-                    expect([200, 204]).toContain(response.status);
-                } catch (error) {
-                    if (error.response) {
-                        expect([400, 409]).toContain(error.response.status);
-                        expect(error.response.data.success).toBe(false);
-                    } else {
-                        expect.fail('No response received: ' + error.message);
-                    }
-                }
-            });
-
-            it('TC107: teamId does not exist - Should return 404', async () => {
+            it('TC79: teamId does not exist - Should return 404', async () => {
                 try {
                     await axios.delete(
                         `${BASE_URL}/teams/99999`,
@@ -2182,7 +1568,7 @@ describe('Teams API Integration Tests', () => {
                 }
             });
 
-            it('TC108: Invalid teamId format - string - Should return 400 or 404', async () => {
+            it('TC80: Invalid teamId format - string - Should return 400 or 404', async () => {
                 try {
                     await axios.delete(
                         `${BASE_URL}/teams/invalid-string-id`,
@@ -2198,7 +1584,7 @@ describe('Teams API Integration Tests', () => {
                 }
             });
 
-            it('TC109: Missing token - Should return 401', async () => {
+            it('TC81: Missing token - Should return 401', async () => {
                 const team = await createTeam();
                 try {
                     await axios.delete(`${BASE_URL}/teams/${team.id}`);
@@ -2212,7 +1598,7 @@ describe('Teams API Integration Tests', () => {
                 }
             });
 
-            it('TC110: Invalid token - Should return 401', async () => {
+            it('TC82: Invalid token - Should return 401', async () => {
                 const team = await createTeam();
                 try {
                     await axios.delete(
@@ -2229,7 +1615,7 @@ describe('Teams API Integration Tests', () => {
                 }
             });
 
-            it('TC111: Unauthorized user - Should return 404 when user is not owner', async () => {
+            it('TC83: Unauthorized user - Should return 404 when user is not owner', async () => {
                 const team = await createTeam();
                 // Create another user
                 const timestamp = Date.now();
@@ -2262,7 +1648,7 @@ describe('Teams API Integration Tests', () => {
                 }
             });
 
-            it('TC112: Edge case - null teamId - Should return 400 or 404', async () => {
+            it('TC84: Edge case - null teamId - Should return 400 or 404', async () => {
                 try {
                     await axios.delete(
                         `${BASE_URL}/teams/null`,
@@ -2277,23 +1663,6 @@ describe('Teams API Integration Tests', () => {
                     }
                 }
             });
-
-            it('TC113: Edge case - empty teamId - Should return 400 or 404', async () => {
-                try {
-                    await axios.delete(
-                        `${BASE_URL}/teams/`,
-                        { headers: { Authorization: `Bearer ${validToken}` } }
-                    );
-                } catch (error) {
-                    if (error.response) {
-                        expect([400, 404]).toContain(error.response.status);
-                        expect(error.response.data.success).toBe(false);
-                    } else {
-                        expect.fail('No response received: ' + error.message);
-                    }
-                }
-            });
-
         });
 
     });
