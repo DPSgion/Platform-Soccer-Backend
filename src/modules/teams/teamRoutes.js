@@ -13,7 +13,9 @@ router.put("/:teamId", authMiddleware(["ORGANIZER"]), upload.any(), teamControll
 router.delete("/:teamId", authMiddleware(["ORGANIZER"]), teamController.deleteTeam);
 
 //TEAM MEMBERS
+
 router.get("/:teamId/members", teamController.getTeamMembers);
 router.get("/:teamId/members/:playerId", teamController.getTeamMemberById);
+router.delete("/:teamId/members/:playerId",teamController.deleteTeamMember);
 
 module.exports = router;
