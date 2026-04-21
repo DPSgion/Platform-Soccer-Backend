@@ -3,7 +3,10 @@ const express = require("express");
 const router = express.Router();
 
 const controller = require("./tournamentController");
-router.get("/", controller.getAllTournaments);
+const { authMiddleware } = require("../../middlewares/authMiddleware");
+
+//Get all tournament
+router.get("/", authMiddleware(["ORGANIZER"]), controller.getAllTournaments);
 // Create tournament
 router.post("/create", controller.createTournament);
 
@@ -11,7 +14,7 @@ router.post("/create", controller.createTournament);
 router.put("/:id/update", controller.updateTournament);
 
 // Delete tournament
-router.delete("/:id/delete", controller.deleteTournament);
+router.delete("/:id/delete", authMiddleware(["ORGANIZER"]), controller.deleteTournament);
 
 // Tournament details
 router.get("/:id/details", controller.getTournamentDetails);
