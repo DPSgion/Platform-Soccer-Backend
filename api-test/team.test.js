@@ -1664,7 +1664,180 @@ describe('Teams API Integration Tests', () => {
                 }
             });
         });
+    });
+        // ==================== GET /public/teams - Happy Cases ====================
+    describe('GET /public/teams - Happy Cases', () => {
+
+        it('TC85: Get all public teams - Should return array of all teams without authentication', async () => {
+            const response = await axios.get(`${BASE_URL}/public/teams`);
+
+            expect(response.status).toBe(200);
+            expect(response.data.success).toBe(true);
+            expect(Array.isArray(response.data.data)).toBe(true);
+        });
+
+        it('TC86: Validate public team response structure - Should contain all required fields', async () => {
+            const response = await axios.get(`${BASE_URL}/public/teams`);
+
+            expect(response.status).toBe(200);
+            expect(Array.isArray(response.data.data)).toBe(true);
+            
+            if (response.data.data.length > 0) {
+                const team = response.data.data[0];
+                expect(team).toHaveProperty('id');
+                expect(team).toHaveProperty('name');
+                expect(team).toHaveProperty('country');
+                expect(team).toHaveProperty('description');
+                expect(team).toHaveProperty('logo_url');
+                expect(team).toHaveProperty('kit_url');
+                expect(team).toHaveProperty('manager_id');
+                expect(team).toHaveProperty('created_at');
+                expect(team).toHaveProperty('updated_at');
+            }
+        });
+
+        it('TC87: Search teams by name with valid keyword - Should return matching teams', async () => {
+            const response = await axios.get(`${BASE_URL}/public/teams?search=Team`, {
+                headers: { 'Authorization': `Bearer ${validToken}` }
+            });
+
+            expect(response.status).toBe(200);
+            expect(response.data.success).toBe(true);
+            expect(Array.isArray(response.data.data)).toBe(true);
+            
+            if (response.data.data.length > 0) {
+                response.data.data.forEach(team => {
+                    expect(team.name.toLowerCase()).toContain('team');
+                });
+            }
+        });
+
+        it('TC88: Search teams with Vietnamese characters - Should handle Unicode correctly', async () => {
+            const response = await axios.get(`${BASE_URL}/public/teams?search=Đội`, {
+                headers: { 'Authorization': `Bearer ${validToken}` }
+            });
+
+            expect(response.status).toBe(200);
+            expect(response.data.success).toBe(true);
+            expect(Array.isArray(response.data.data)).toBe(true);
+        });
+
+        it('TC89: Get public teams without query parameter - Should return all teams', async () => {
+            const response = await axios.get(`${BASE_URL}/public/teams`);
+
+            expect(response.status).toBe(200);
+            expect(response.data.success).toBe(true);
+            expect(Array.isArray(response.data.data)).toBe(true);
+            expect(response.data.data.length).toBeGreaterThanOrEqual(0);
+        });
+
+    });
+
+    // ==================== GET /public/teams - Unhappy Cases ====================
+    describe('GET /public/teams - Unhappy Cases', () => {
+
+        it('TC90: Search with no matching results - Should return empty array', async () => {
+            const uniqueKeyword = 'NonExistentTeam' + Date.now();
+            const response = await axios.get(`${BASE_URL}/public/teams?search=${uniqueKeyword}`);
+
+            expect(response.status).toBe(200);
+            expect(response.data.success).toBe(true);
+            expect(Array.isArray(response.data.data)).toBe(true);
+            expect(response.data.data.length).toBe(0);
+        });
+
+        it('TC91: Search with special characters - Should safely handle special characters', async () => {
+            const response = await axios.get(`${BASE_URL}/public/teams?search=!@#$%^&*()`);
+
+            expect(response.status).toBe(200);
+            expect(response.data.success).toBe(true);
+            expect(Array.isArray(response.data.data)).toBe(true);
+        });
+
+    });
+
+    // ==================== GET /public/teams/{teamId}/members - Unhappy Cases ====================
+    describe('GET /public/teams/:teamId/members - Unhappy Cases', () => {
+
+        it('TC92: teamId does not exist - Should return 404', async () => {
+            try {
+                await axios.get(`${BASE_URL}/public/teams/99999/members`);
+            } catch (error) {
+                if (error.response) {
+                    expect([400, 404]).toContain(error.response.status);
+                } else {
+                    expect.fail('No response received: ' + error.message);
+                }
+            }
+        });
+
+        it('TC93: Invalid teamId format - string - Should return 400 or 404', async () => {
+            try {
+                await axios.get(`${BASE_URL}/public/teams/invalid-string-id/members`);
+            } catch (error) {
+                if (error.response) {
+                    expect([400, 404]).toContain(error.response.status);
+                } else {
+                    expect.fail('No response received: ' + error.message);
+                }
+            }
+        });
+    });
+
+    // ==================== GET /public/teams/{teamId}/members/{playerId} - Unhappy Cases ====================
+    describe('GET /public/teams/:teamId/members/:playerId - Unhappy Cases', () => {
+
+        it('TC94: teamId does not exist - Should return 404', async () => {
+            try {
+                await axios.get(`${BASE_URL}/public/teams/99999/members/1`);
+            } catch (error) {
+                if (error.response) {
+                    expect([400, 404]).toContain(error.response.status);
+                } else {
+                    expect.fail('No response received: ' + error.message);
+                }
+            }
+        });
+
+        it('TC95: playerId does not exist - Should return 404', async () => {
+            const team = await createTeam();
+            try {
+                await axios.get(`${BASE_URL}/public/teams/${team.id}/members/99999`);
+            } catch (error) {
+                if (error.response) {
+                    expect(error.response.status).toBe(404);
+                } else {
+                    expect.fail('No response received: ' + error.message);
+                }
+            }
+        });
+
+        it('TC96: Invalid teamId format - string - Should return 400 or 404', async () => {
+            try {
+                await axios.get(`${BASE_URL}/public/teams/invalid-string-id/members/1`);
+            } catch (error) {
+                if (error.response) {
+                    expect([400, 404]).toContain(error.response.status);
+                } else {
+                    expect.fail('No response received: ' + error.message);
+                }
+            }
+        });
+
+        it('TC97: Invalid playerId format - string - Should return 400 or 404', async () => {
+            const team = await createTeam();
+            try {
+                await axios.get(`${BASE_URL}/public/teams/${team.id}/members/invalid-string-id`);
+            } catch (error) {
+                if (error.response) {
+                    expect([400, 404]).toContain(error.response.status);
+                } else {
+                    expect.fail('No response received: ' + error.message);
+                }
+            }
+        });
 
     });
 
 });
+
