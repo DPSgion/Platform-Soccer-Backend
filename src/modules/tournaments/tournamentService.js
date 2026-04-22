@@ -100,7 +100,7 @@ async function deleteTournament(id, organizerId) {
     return { success: true };
 }
 
-exports.create = (data) => {
+const create = (data) => {
     const newTournament = {
         id: Date.now().toString(),
         ...data,
@@ -115,25 +115,100 @@ exports.create = (data) => {
     };
 };
 
-exports.update = (id, data) => {
-    const index = tournaments.findIndex(t => t.id === id);
+const updateTournament = async (id, data) => {
+    const [rows] = await pool.query(
+        "SELECT * FROM tournaments WHERE id = ?",
+        [id]
+    );
 
-    if (index === -1) {
-        return { message: "Tournament not found" };
+    const tournament = rows[0];
+
+    if (tournament.length === 0) {
+        throw new Error("Tournament not found");
     }
 
-    tournaments[index] = {
-        ...tournaments[index],
-        ...data
-    };
+    const fields = {};
 
-    return {
-        message: "Tournament updated",
-        data: tournaments[index]
-    };
+    if (data.name !== undefined) {
+        if (data.name.trim() === "") {
+            throw new Error("Name cannot be empty");
+        }
+        fields.name = data.name;
+    }
+
+    if (data.logo_url !== undefined) {
+        fields.logo_url = data.logo_url;
+    }
+
+    if (data.description !== undefined) {
+        fields.description = data.description;
+    }
+
+    if (data.format !== undefined) {
+        if ( data.status !== "UPCOMING") {
+            throw new Error("Format cannot be updated after tournament starts");
+        }
+        fields.format = data.format;
+    }
+
+    if (data.start_date !== undefined || data.end_date !== undefined) {
+        if (data.status !== "UPCOMING") {
+            throw new Error("Start date and end date cannot be updated after tournament starts");
+        }
+        
+        const startDate = data.start_date || tournament.start_date;
+        const endDate = data.end_date || tournament.end_date;
+
+        if (new Date(startDate) >= new Date(endDate)) {
+            throw new Error("Start date must be before end date");
+        }
+
+        if (data.start_date !== undefined) {
+            fields.start_date = startDate;
+        }
+        if (data.end_date !== undefined) {
+            fields.end_date = endDate;
+        }
+    }
+    
+    if (data.status !== undefined) {
+        const validTransitions = {
+            UPCOMING: ["ONGOING", "CANCELLED"],
+            ONGOING: ["COMPLETED"],
+            COMPLETED: [],
+            CANCELLED: []
+        }
+
+        if (!validTransitions[tournament.status].includes(data.status)) {
+            throw new Error("Invalid status transition", 400 );
+        }
+        fields.status = data.status;   
+    }
+
+    if (Object.keys(fields).length === 0) {
+        throw new Error("No data to update");
+    }
+
+    fields.updated_at = new Date();
+
+    const setClause = Object.keys(fields).map(key => `${key} = ?`).join(", ");
+
+    const updateValues = [...Object.values(fields), id];
+
+    await pool.query(
+        `UPDATE tournaments SET ${setClause} WHERE id = ?`,
+        updateValues
+    );
+
+    const [updatedRows] = await pool.query(
+        "SELECT * FROM tournaments WHERE id = ?",
+        [id]
+    );
+
+    return updatedRows[0];
 };
 
-exports.getDetails = (id) => {
+const getDetails = (id) => {
     const tournament = tournaments.find(t => t.id === id);
 
     return {
@@ -142,7 +217,7 @@ exports.getDetails = (id) => {
     };
 };
 
-exports.registerTeam = (id, data) => {
+const registerTeam = (id, data) => {
     return {
         message: "Team registered",
         tournamentId: id,
@@ -150,7 +225,7 @@ exports.registerTeam = (id, data) => {
     };
 };
 
-exports.getProfile = (id) => {
+const getProfile = (id) => {
     const tournament = tournaments.find(t => t.id === id);
 
     return {
@@ -161,5 +236,11 @@ exports.getProfile = (id) => {
 
 module.exports = {
     getAllTournaments,
-    deleteTournament
+    deleteTournament,
+    create,
+    updateTournament,
+    getDetails,
+    registerTeam,
+    getProfile
+
 };

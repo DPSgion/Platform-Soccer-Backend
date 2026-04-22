@@ -1,6 +1,6 @@
 const tournamentService = require("./tournamentService");
 
-exports.getAllTournaments = async (req, res, next) => {
+const getAllTournaments = async (req, res, next) => {
     try {
         const organizerId = req.user.id;
         const data = await tournamentService.getAllTournaments(organizerId);
@@ -10,18 +10,26 @@ exports.getAllTournaments = async (req, res, next) => {
     }
 };
 
-exports.createTournament = (req, res) => {
-    const data = tournamentService.create(req.body);
-    res.json(data);
-};
-
-exports.updateTournament = (req, res) => {
+const updateTournament = async (req, res) => {
+  try {
     const { id } = req.params;
-    const data = tournamentService.update(id, req.body);
-    res.json(data);
+    const data = req.body;
+
+    const result = await tournamentService.updateTournament(id, data);
+
+    return res.status(200).json({
+      success: true,
+      message: "Update tournament successfully",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      message: error.message,
+    });
+  }
 };
 
-exports.deleteTournament = async (req, res, next) => {
+const deleteTournament = async (req, res, next) => {
     try {
         const { id } = req.params;
         const organizerId = req.user.id;
@@ -33,24 +41,24 @@ exports.deleteTournament = async (req, res, next) => {
     }
 };
 
-exports.getTournamentDetails = (req, res) => {
+const getTournamentDetails = (req, res) => {
     const { id } = req.params;
     const data = tournamentService.getDetails(id);
     res.json(data);
 };
 
-exports.registerTeam = (req, res) => {
+const registerTeam = (req, res) => {
     const { id } = req.params;
     const data = tournamentService.registerTeam(id, req.body);
     res.json(data);
 };
 
-exports.getTournamentProfile = (req, res) => {
+const getTournamentProfile = (req, res) => {
     const { id } = req.params;
     const data = tournamentService.getProfile(id);
     res.json(data);
 };
-exports.createTournament = (req, res) => {
+const createTournament = (req, res) => {
     const { name, description, format, start_date, end_date, organizer_id } = req.body;
 
     // Validate cơ bản
@@ -72,7 +80,13 @@ exports.createTournament = (req, res) => {
 
     res.status(201).json(data);
 };
-exports.createTournament = async (req, res) => {
-    const data = await tournamentService.create(req.body);
-    res.json(data);
+
+module.exports = {
+    getAllTournaments,
+    createTournament,
+    updateTournament,
+    deleteTournament,
+    getTournamentDetails,
+    registerTeam,
+    getTournamentProfile
 };
