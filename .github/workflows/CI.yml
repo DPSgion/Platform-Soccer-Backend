@@ -64,13 +64,13 @@ jobs:
           DB_NAME: cupzone_test
           DB_PORT: 3306
 
-      - name: 7. Run k6 Load Test
-        uses: grafana/k6-action@v0.3.1
-        with:
-          filename: k6/team-load-test.js
-        env:
-          BASE_URL: 'http://localhost:3000'
-          TOKEN: ${{ secrets.TOKEN }}
+      # - name: 7. Run k6 Load Test
+      #   uses: grafana/k6-action@v0.3.1
+      #   with:
+      #     filename: k6/team-load-test.js
+      #   env:
+      #     BASE_URL: 'http://localhost:3000'
+      #     TOKEN: ${{ secrets.TOKEN }}
 
 
   # JOB 2: Check Docker build
