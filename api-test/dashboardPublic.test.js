@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 // ================= CONFIG =================
-const BASE_URL = process.env.BASE_URL || 'https://backend.cupzone.fun/public';
+const BASE_URL = (process.env.BASE_URL || 'https://backend.cupzone.fun') + '/public';
 
 jest.retryTimes(2);
 

@@ -2,7 +2,7 @@ const axios = require('axios');
 const { z } = require('zod');
 
 // ================= CONFIG =================
-const BASE_URL = process.env.BASE_URL || 'https://backend.cupzone.fun/auth';
+const BASE_URL = (process.env.BASE_URL || 'https://backend.cupzone.fun') + '/auth';
 
 jest.retryTimes(2);
 
