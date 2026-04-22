@@ -181,7 +181,7 @@ describe("II. UNHAPPY CASE", () => {
     });
 
     test("TC16 - Lỗi kết nối Cloud (Mô phỏng)", async () => {
-        console.log("💡 TC17 thường được test bằng cách mock function để giả lập Cloud bị sập.");
+        console.log("TC17 thường được test bằng cách mock function để giả lập Cloud bị sập.");
         expect(true).toBe(true);
     });
 });
