@@ -11,7 +11,7 @@ router.get("/", authMiddleware(["ORGANIZER"]), controller.getAllTournaments);
 router.post("/create", controller.createTournament);
 
 // Update tournament
-router.put("/:id/update", controller.updateTournament);
+router.put("/:id/update", authMiddleware(["ORGANIZER"]), controller.updateTournament);
 
 // Delete tournament
 router.delete("/:id/delete", authMiddleware(["ORGANIZER"]), controller.deleteTournament);
