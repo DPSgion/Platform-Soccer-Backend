@@ -1,11 +1,20 @@
 const matchService = require('./matchService');
+const { AppError } = require('../../middlewares/errorMiddleware');
 
-const createMatch = async (req, res) => {
+const createMatch = async (req, res, next) => {
     try {
-        const match = await matchService.createMatch(req.body);
-        res.status(201).json({ success: true, data: match });
+        if (!req.user || !req.user.id) {
+            return next(new AppError("Unauthorized", 401, "UNAUTHORIZED"));
+        }
+
+        const match = await matchService.createMatch(req.body, req.user.id);
+        return res.status(201).json({
+            success: true,
+            message: "Match created successfully",
+            data: match
+        });
     } catch (error) {
-        res.status(400).json({ success: false, message: error.message });
+        return next(error);
     }
 };
 
