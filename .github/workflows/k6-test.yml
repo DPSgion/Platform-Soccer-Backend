@@ -9,16 +9,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install k6
         run: |
           sudo apt update
           sudo apt install -y k6
 
-      - name: Run k6 test
+      - name: Run k6
         run: |
           k6 run k6/team-load-test.js
         env:
-          TOKEN: ${{ secrets.TOKEN }}A
+          TOKEN: ${{ secrets.TOKEN }}
