@@ -1,7 +1,7 @@
 const axios = require("axios");
 
 // CẤU HÌNH
-const BASE_URL = (process.env.BASE_URL || 'https://backend.cupzone.fun') + '/matches';
+const BASE_URL = ('https://backend.cupzone.fun');
 // hoặc tùy theo endpoint thực tế
 const LOGIN_URL = `${BASE_URL}/auth/login`;
 

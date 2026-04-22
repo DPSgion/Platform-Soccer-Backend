@@ -73,9 +73,11 @@ describe("I. HAPPY CASE", () => {
         const newName = "Tên Cập Nhật TC04";
         const res = await api.put("/users/me", { full_name: newName });
 
-        // Nếu nhận 404, hãy kiểm tra lại Route trong Backend
         expect(res.status).toBe(200);
         expect(res.data.data.full_name).toBe(newName);
+
+        // THÊM DÒNG NÀY: Cập nhật lại biến local để các test sau hoặc lần chạy sau đồng bộ
+        currentUser.full_name = newName;
     });
 
     test("TC05 - Cập nhật chỉ phone", async () => {
@@ -150,6 +152,10 @@ describe("II. UNHAPPY CASE", () => {
 
     test("TC13 - Upload không có file", async () => {
         const form = new FormData();
+
+        // Thêm field name "avatar" nhưng để giá trị rỗng hoặc không đính kèm file thực thụ
+        // Điều này giúp Backend nhận diện đúng field nhưng vẫn báo thiếu file
+        form.append("avatar", "");
 
         // Gửi request và bắt error trả về từ Axios
         const res = await api.post("/users/me/avatar", form, {
