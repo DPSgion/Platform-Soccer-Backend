@@ -100,38 +100,18 @@ async function deleteTournament(id, organizerId) {
     return { success: true };
 }
 
+const create = (data) => {
+    const newTournament = {
+        id: Date.now().toString(),
+        ...data,
+        status: "UPCOMING"
+    };
 
-const create = async (data) => {
-    // Chuẩn bị dữ liệu
-    const {
-        name,
-        description = "",
-        format,
-        start_date,
-        end_date,
-        organizer_id,
-        logo_url = ""
-    } = data;
-
-    // status mặc định là UPCOMING
-    const status = "UPCOMING";
-
-    // Thực hiện insert vào DB
-    const [result] = await pool.execute(
-        `INSERT INTO tournaments (name, description, format, start_date, end_date, organizer_id, logo_url, status, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-        [name, description, format, start_date, end_date, organizer_id, logo_url, status]
-    );
-
-    // Lấy lại bản ghi vừa tạo
-    const [rows] = await pool.execute(
-        `SELECT * FROM tournaments WHERE id = ?`,
-        [result.insertId]
-    );
+    tournaments.push(newTournament);
 
     return {
         message: "Tournament created",
-        data: rows[0]
+        data: newTournament
     };
 };
 
