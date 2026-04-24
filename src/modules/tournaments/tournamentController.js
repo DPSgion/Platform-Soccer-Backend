@@ -58,31 +58,27 @@ const getTournamentProfile = (req, res) => {
     const data = tournamentService.getProfile(id);
     res.json(data);
 };
-const createTournament = async (req, res, next) => {
-    try {
-        const { name, description, format, start_date, end_date, organizer_id } = req.body;
+const createTournament = (req, res) => {
+    const { name, description, format, start_date, end_date, organizer_id } = req.body;
 
-        // Validate cơ bản
-        if (!name || !format || !start_date || !end_date) {
-            return res.status(400).json({
-                message: "Thiếu thông tin bắt buộc"
-            });
-        }
-
-        const result = await tournamentService.create({
-            name,
-            description,
-            format,
-            start_date,
-            end_date,
-            organizer_id,
-            logo_url: req.body.logo_url || ""
+    // Validate cơ bản
+    if (!name || !format || !start_date || !end_date) {
+        return res.status(400).json({
+            message: "Thiếu thông tin bắt buộc"
         });
-
-        res.status(201).json(result);
-    } catch (error) {
-        next(error);
     }
+
+    const data = tournamentService.create({
+        name,
+        description,
+        format,
+        start_date,
+        end_date,
+        organizer_id,
+        logo_url: req.body.logo_url || ""
+    });
+
+    res.status(201).json(data);
 };
 
 module.exports = {
