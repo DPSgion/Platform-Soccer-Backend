@@ -100,18 +100,49 @@ async function deleteTournament(id, organizerId) {
     return { success: true };
 }
 
-const create = (data) => {
-    const newTournament = {
-        id: Date.now().toString(),
-        ...data,
-        status: "UPCOMING"
-    };
+const { v4: uuidv4 } = require("uuid");
 
-    tournaments.push(newTournament);
+const createTournament = async (data) => {
+    const { name, description, format, start_date, end_date, organizer_id, logo_url } = data;
+
+    if (!name || !format || !start_date || !end_date || !organizer_id) {
+        const error = new Error("Thiếu thông tin bắt buộc");
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const id = uuidv4();
+
+    await pool.execute(
+        `INSERT INTO tournaments 
+        (id, organizer_id, name, logo_url, description, format, start_date, end_date, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+            id,
+            organizer_id,
+            name,
+            logo_url || "",
+            description || "",
+            format,
+            start_date,
+            end_date,
+            "UPCOMING"
+        ]
+    );
 
     return {
-        message: "Tournament created",
-        data: newTournament
+        message: "Tạo tournament thành công",
+        data: {
+            id,
+            name,
+            description,
+            format,
+            start_date,
+            end_date,
+            organizer_id,
+            logo_url,
+            status: "UPCOMING"
+        }
     };
 };
 
@@ -237,7 +268,7 @@ const getProfile = (id) => {
 module.exports = {
     getAllTournaments,
     deleteTournament,
-    create,
+    createTournament,
     updateTournament,
     getDetails,
     registerTeam,
