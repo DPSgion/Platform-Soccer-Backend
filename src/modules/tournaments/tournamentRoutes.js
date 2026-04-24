@@ -8,7 +8,7 @@ const { authMiddleware } = require("../../middlewares/authMiddleware");
 //Get all tournament
 router.get("/", authMiddleware(["ORGANIZER"]), controller.getAllTournaments);
 // Create tournament
-router.post("/create", controller.createTournament);
+router.post("/create", authMiddleware(["ORGANIZER"]), controller.createTournament);
 
 // Update tournament
 router.put("/:id/update", authMiddleware(["ORGANIZER"]), controller.updateTournament);
