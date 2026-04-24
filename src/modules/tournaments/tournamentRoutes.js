@@ -1,31 +1,13 @@
-
 const express = require("express");
 const router = express.Router();
-
 const controller = require("./tournamentController");
-const { authMiddleware } = require("../../middlewares/authMiddleware");
 
-//Get all tournament
-router.get("/", authMiddleware(["ORGANIZER"]), controller.getAllTournaments);
-// Create tournament
+router.get("/", controller.getAllTournaments);
 router.post("/create", controller.createTournament);
-
-// Update tournament
-router.put("/:id/update", authMiddleware(["ORGANIZER"]), controller.updateTournament);
-
-// Delete tournament
-router.delete("/:id/delete", authMiddleware(["ORGANIZER"]), controller.deleteTournament);
-
-// Tournament details
+router.put("/:id/update", controller.updateTournament);
+router.delete("/:id/delete", controller.deleteTournament);
 router.get("/:id/details", controller.getTournamentDetails);
-
-// Register team
 router.post("/:id/register-team", controller.registerTeam);
-
-// Tournament profile
 router.get("/:id/profile", controller.getTournamentProfile);
-
-// Create tournament (alternative route)
-router.post("/", controller.createTournament);
 
 module.exports = router;
