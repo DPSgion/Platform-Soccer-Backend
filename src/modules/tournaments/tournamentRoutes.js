@@ -8,13 +8,13 @@ const { authMiddleware } = require("../../middlewares/authMiddleware");
 router.get("/", authMiddleware(["ORGANIZER"]), controller.getAllTournaments);
 
 // Create tournament ✅ FIX
-router.post("/", authMiddleware(["ORGANIZER"]), controller.createTournament);
+router.post("/create", authMiddleware(["ORGANIZER"]), controller.createTournament);
 
 // Update tournament
-router.put("/:id", authMiddleware(["ORGANIZER"]), controller.updateTournament);
+router.put("/:id/update", authMiddleware(["ORGANIZER"]), controller.updateTournament);
 
 // Delete tournament
-router.delete("/:id", authMiddleware(["ORGANIZER"]), controller.deleteTournament);
+router.delete("/:id/delete", authMiddleware(["ORGANIZER"]), controller.deleteTournament);
 
 // Tournament details
 router.get("/:id/details", controller.getTournamentDetails);
