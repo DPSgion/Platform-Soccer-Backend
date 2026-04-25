@@ -326,8 +326,7 @@ const addTeamMember = async (req, res, next) => {
     }
 
     // Gọi đến teamService để tạo thành viên mới
-    const newMember = await teamService.addTeamMember({
-      teamId,
+    const newMember = await teamService.addTeamMember(teamId,{
       full_name,
       image_url,
       age,
