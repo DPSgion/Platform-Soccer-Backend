@@ -315,7 +315,15 @@ const uploadKit = async (req, res, next) => {
 const addTeamMember = async (req, res, next) => {
   try {
     const { teamId } = req.params;
-    const { full_name, image_url, age, height_cm, weight_kg, preferred_foot, main_position, jersey_number } = req.body;
+    const { full_name, age, height_cm, weight_kg, preferred_foot, main_position, jersey_number } = req.body;
+
+    // Upload file hình ảnh lên OCI nếu có, nếu không thì dùng image_url từ body
+    let image_url = "";
+    if (req.file) {
+      image_url = await uploadFileToOCI(req.file);
+    } else if (req.body.image_url) {
+      image_url = req.body.image_url;
+    }
 
     // Kiểm tra dữ liệu đầu vào
     if (!full_name || !image_url || !age || !height_cm || !weight_kg || !preferred_foot || !main_position || !jersey_number) {
