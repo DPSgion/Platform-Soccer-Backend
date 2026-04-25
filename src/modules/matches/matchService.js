@@ -639,7 +639,7 @@ exports.addMatchTracking = async (matchId, payload) => {
 };
 
 // Nhập kết quả trận đấu
-exports.setMatchResult = async (matchId, payload, userId) => {
+exports.updateMatchScore = async (matchId, payload, userId) => {
   const [rows] = await db.query(
     `SELECT m.*, t.organizer_id 
      FROM matches m
@@ -653,26 +653,21 @@ exports.setMatchResult = async (matchId, payload, userId) => {
   }
 
   const match = rows[0];
-  // check quyền người nhập kết quả phải là organizer của giải đấu
+
+  // check quyền
   if (match.organizer_id !== userId) {
     throw new AppError("Forbidden", 403, "FORBIDDEN");
   }
 
-  // Bị huỷ
   if (match.is_cancelled) {
     throw new AppError("Match is cancelled", 400, "MATCH_CANCELLED");
   }
 
-  //Đã có kết quả rồi
+  //Đã end rồi thì không cho sửa nữa
   if (match.ended_at) {
-    throw new AppError(
-      "Match result already set",
-      400,
-      "MATCH_ALREADY_FINISHED",
-    );
+    throw new AppError("Match already ended", 400, "MATCH_ALREADY_FINISHED");
   }
 
-  //Chưa tới giờ đá
   if (new Date(match.start_time) > new Date()) {
     throw new AppError("Match has not started yet", 400, "MATCH_NOT_STARTED");
   }
@@ -691,9 +686,7 @@ exports.setMatchResult = async (matchId, payload, userId) => {
   await db.query(
     `UPDATE matches 
      SET home_score = ?, 
-         away_score = ?, 
-         is_active = 0,
-         ended_at = NOW()
+         away_score = ?
      WHERE id = ?`,
     [homeScore, awayScore, matchId],
   );
@@ -702,6 +695,56 @@ exports.setMatchResult = async (matchId, payload, userId) => {
     matchId,
     homeScore,
     awayScore,
+    status: "IN_PROGRESS",
+  };
+};
+exports.endMatch = async (matchId, userId) => {
+  const [rows] = await db.query(
+    `SELECT m.*, t.organizer_id 
+     FROM matches m
+     JOIN tournaments t ON m.tournament_id = t.id
+     WHERE m.id = ?`,
+    [matchId],
+  );
+
+  if (rows.length === 0) {
+    throw new AppError("Match not found", 404, "MATCH_NOT_FOUND");
+  }
+
+  const match = rows[0];
+
+  // check quyền
+  if (match.organizer_id !== userId) {
+    throw new AppError("Forbidden", 403, "FORBIDDEN");
+  }
+
+  if (match.is_cancelled) {
+    throw new AppError("Match is cancelled", 400, "MATCH_CANCELLED");
+  }
+
+  if (match.ended_at) {
+    throw new AppError("Match already ended", 400, "MATCH_ALREADY_FINISHED");
+  }
+
+  if (new Date(match.start_time) > new Date()) {
+    throw new AppError("Match has not started yet", 400, "MATCH_NOT_STARTED");
+  }
+
+  // 🔥 có thể thêm check chưa nhập score
+  if (match.home_score === null || match.away_score === null) {
+    throw new AppError("Score not set yet", 400, "SCORE_NOT_SET");
+  }
+
+  await db.query(
+    `UPDATE matches 
+     SET is_active = 0,
+         ended_at = NOW()
+     WHERE id = ?`,
+    [matchId],
+  );
+
+  return {
+    matchId,
     status: "COMPLETED",
   };
 };

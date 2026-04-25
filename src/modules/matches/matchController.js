@@ -89,19 +89,29 @@ const addMatchTracking = async (req, res) => {
 
 const setMatchResult = async (req, res, next) => {
     try {
-        const result = await matchService.setMatchResult(
-            req.params.matchId,
-            req.body,
-            req.user.id, // 🔥 QUAN TRỌNG
-        );
+      const { action } = req.body;
+      const { matchId } = req.params;
+      const userId = req.user.id;
 
-        return res.status(200).json({
-            success: true,
-            message: "Set match result successfully",
-            data: result,
-        });
+      let result;
+
+      if (action === "END") {
+        result = await matchService.endMatch(matchId, userId);
+      } else {
+        // default = UPDATE SCORE
+        result = await matchService.updateMatchScore(matchId, req.body, userId);
+      }
+
+      return res.status(200).json({
+        success: true,
+        message:
+          action === "END"
+            ? "Match ended successfully"
+            : "Score updated successfully",
+        data: result,
+      });
     } catch (error) {
-        return next(error);
+      return next(error);
     }
 };
 const getOrganizerMatches = async (req, res, next) => {
