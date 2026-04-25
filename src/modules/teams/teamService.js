@@ -288,5 +288,6 @@ module.exports = {
   getTeamMembers,
   getTeamMemberById,
   deleteTeamMember,
-  getTeamsByManager
+  getTeamsByManager,
+  addTeamMember
 };

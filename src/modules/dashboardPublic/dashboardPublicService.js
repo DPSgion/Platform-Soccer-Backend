@@ -87,7 +87,7 @@ const getTournaments = async () => {
 };
 //Chi tiết giải đấu và các trận đấu liên quan
 const getTournamentMatches = async (tournamentId) => {
-  const tournament = tournaments.find((t) => t.id === tournamentId);
+  const tournament = tournaments.find((t) => t.id == tournamentId);
 
   if (!tournament) {
     throw new Error("Tournament not found");
@@ -99,7 +99,7 @@ const getTournamentMatches = async (tournamentId) => {
       ...m,
       home_team: {
         id: m.home_team_id,
-        name: teams[m.home_team_id].name,
+        name: teams[m.home_team_id]?.name,
         logo: teams[m.home_team_id].logo,
       },
       away_team: {

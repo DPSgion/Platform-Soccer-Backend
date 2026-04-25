@@ -312,6 +312,43 @@ const uploadKit = async (req, res, next) => {
     return res.status(200).json({ success: true, message: "Kit uploaded", data: { kit_url: newKits } });
   } catch (error) { return next(error); }
 };
+const addTeamMember = async (req, res, next) => {
+  try {
+    const { teamId } = req.params;
+    const { full_name, image_url, age, height_cm, weight_kg, preferred_foot, main_position, jersey_number } = req.body;
+
+    // Kiểm tra dữ liệu đầu vào
+    if (!full_name || !image_url || !age || !height_cm || !weight_kg || !preferred_foot || !main_position || !jersey_number) {
+      return res.status(400).json({
+        success: false,
+        message: "All member details are required"
+      });
+    }
+
+    // Gọi đến teamService để tạo thành viên mới
+    const newMember = await teamService.addTeamMember({
+      teamId,
+      full_name,
+      image_url,
+      age,
+      height_cm,
+      weight_kg,
+      preferred_foot,
+      main_position,
+      jersey_number
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Member added successfully",
+      data: newMember
+    });
+  } catch (error) {
+    console.error("Error in addTeamMember:", error);
+    return next(error);
+  }
+};
+
 
 module.exports = {
   createTeam,
@@ -323,5 +360,6 @@ module.exports = {
   getTeamMemberById,
   uploadLogo,
   uploadKit,
-  deleteTeamMember
+  deleteTeamMember,
+  addTeamMember
 };
