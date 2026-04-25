@@ -371,4 +371,3 @@ module.exports = {
   deleteTeamMember,
   getTeamsByManager,
   addTeamMember
-};
