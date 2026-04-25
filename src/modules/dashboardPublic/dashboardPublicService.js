@@ -1,5 +1,5 @@
 const db = require("../../dbConfig");
-
+// Lay danh sach giai dau
 const getTournaments = async () => {
   const [rows] = await db.query(`
     SELECT 
@@ -21,33 +21,75 @@ const getTournaments = async () => {
 
 //Chi tiết giải đấu và các trận đấu liên quan
 const getTournamentMatches = async (tournamentId) => {
-  const tournament = tournaments.find((t) => t.id == tournamentId);
+  // 1. Lấy tournament
+  const [tournamentRows] = await db.query(
+    `SELECT * FROM tournaments WHERE id = ?`,
+    [tournamentId],
+  );
 
-  if (!tournament) {
-    throw new Error("Tournament not found");
+  if (tournamentRows.length === 0) {
+    throw new AppError("Tournament not found", 404, "TOURNAMENT_NOT_FOUND");
   }
 
-  const tournamentMatches = matches
-    .filter((m) => m.tournament_id === tournamentId)
-    .map((m) => ({
-      ...m,
-      home_team: {
-        id: m.home_team_id,
-        name: teams[m.home_team_id]?.name,
-        logo: teams[m.home_team_id].logo,
-      },
-      away_team: {
-        id: m.away_team_id,
-        name: teams[m.away_team_id].name,
-        logo: teams[m.away_team_id].logo,
-      },
-    }));
+  const tournament = tournamentRows[0];
+
+  // 2. Lấy matches + team info
+  const [matches] = await db.query(
+    `
+    SELECT 
+      m.id,
+      m.tournament_id,
+      m.home_team_id,
+      m.away_team_id,
+      m.home_score,
+      m.away_score,
+      m.stadium,
+      m.start_time,
+
+      ht.name AS home_team_name,
+      ht.logo_url AS home_team_logo,
+
+      at.name AS away_team_name,
+      at.logo_url AS away_team_logo
+
+    FROM matches m
+    JOIN teams ht ON m.home_team_id = ht.id
+    JOIN teams at ON m.away_team_id = at.id
+
+    WHERE m.tournament_id = ?
+    ORDER BY m.start_time ASC
+    `,
+    [tournamentId],
+  );
+
+  // 3. Format lại giống mock data cũ
+  const formattedMatches = matches.map((m) => ({
+    id: m.id,
+    tournament_id: m.tournament_id,
+    home_score: m.home_score,
+    away_score: m.away_score,
+    stadium: m.stadium,
+    start_time: m.start_time,
+
+    home_team: {
+      id: m.home_team_id,
+      name: m.home_team_name,
+      logo: m.home_team_logo,
+    },
+
+    away_team: {
+      id: m.away_team_id,
+      name: m.away_team_name,
+      logo: m.away_team_logo,
+    },
+  }));
 
   return {
     tournament,
-    matches: tournamentMatches,
+    matches: formattedMatches,
   };
 };
+
 
 const getTeamMemberDetail = async (teamId, playerId) => {
   const [rows] = await db.execute(
