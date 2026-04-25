@@ -279,6 +279,50 @@ const deleteTeamMember = async (teamId, playerId) => {
   return result.affectedRows;
 };
 
+// Thêm member vào team
+const addTeamMember = async (teamId, memberData) => {
+  const {
+    full_name,
+    image_url,
+    age,
+    height_cm,
+    weight_kg,
+    preferred_foot,
+    main_position,
+    jersey_number
+  } = memberData;
+
+  const [result] = await pool.execute(
+    `
+    INSERT INTO team_members (
+      team_id,
+      full_name,
+      image_url,
+      age,
+      height_cm,
+      weight_kg,
+      preferred_foot,
+      main_position,
+      jersey_number
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    [teamId, full_name, image_url, age, height_cm, weight_kg, preferred_foot, main_position, jersey_number]
+  );
+
+  return {
+    id: result.insertId,
+    team_id: teamId,
+    full_name,
+    image_url,
+    age,
+    height_cm,
+    weight_kg,
+    preferred_foot,
+    main_position,
+    jersey_number
+  }
+};
+
 module.exports = {
   createTeam,
   getAllTeams,
