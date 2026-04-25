@@ -178,11 +178,9 @@ async function updateTeam(teamId, payload) {
 }
 
 async function deleteTeam(teamId, managerId) {
-  // Kiểm tra team tồn tại
   const team = await getTeamById(teamId);
   if (!team) return null;
 
-  // Kiểm tra ràng buộc 1: Giải đấu hiện tại
   const activeTournaments = await getTeamTournaments(teamId);
   if (activeTournaments.length > 0) {
     const error = new Error("Team is participating in active tournament(s)");
@@ -191,7 +189,6 @@ async function deleteTeam(teamId, managerId) {
     throw error;
   }
 
-  // Kiểm tra ràng buộc 2: Còn thành viên
   const memberCount = await getTeamMembersFromDB(teamId);
   if (memberCount > 0) {
     const error = new Error(`Team still has ${memberCount} member(s)`);
@@ -199,7 +196,6 @@ async function deleteTeam(teamId, managerId) {
     throw error;
   }
 
-  // Thực hiện xóa
   const [result] = await pool.execute(
     "DELETE FROM teams WHERE id = ? AND manager_id = ?",
     [teamId, managerId]
@@ -208,46 +204,62 @@ async function deleteTeam(teamId, managerId) {
   return result.affectedRows;
 }
 
-// Kiểm tra team có đang trong giải đấu không
 async function getTeamTournaments(teamId) {
-  const [rows] = await pool.execute(`
+  const [rows] = await pool.execute(
+    `
     SELECT t.id, t.name, t.status
     FROM tournaments t
     JOIN tournament_teams tt ON t.id = tt.tournament_id
     WHERE tt.team_id = ? AND t.status IN ('UPCOMING', 'ONGOING')
-  `, [teamId]);
+    `,
+    [teamId]
+  );
+
   return rows;
 }
 
-// Kiểm tra team còn thành viên không
 async function getTeamMembersFromDB(teamId) {
   const [rows] = await pool.execute(
     "SELECT COUNT(*) as count FROM team_members WHERE team_id = ?",
     [teamId]
   );
+
   return rows[0].count;
 }
 
 async function getTeamsByManager(managerId) {
   const [rows] = await pool.execute(
-    `SELECT id, name, country, description, logo_url, kit_url, manager_id
-     FROM teams WHERE manager_id = ? ORDER BY created_at DESC`,
+    `
+    SELECT
+      id,
+      name,
+      country,
+      description,
+      logo_url,
+      kit_url,
+      manager_id
+    FROM teams
+    WHERE manager_id = ?
+    ORDER BY created_at DESC
+    `,
     [managerId]
   );
-  return rows.map(team => ({
+
+  return rows.map((team) => ({
     ...team,
     kit_url: team.kit_url ? JSON.parse(team.kit_url) : []
   }));
 }
 
 // ===== TEAM MEMBERS =====
+
 const getTeamMembers = (teamId) =>
   teamMembers.filter((member) => member.team_id === teamId);
 
 const getTeamMemberById = async (teamId, playerId) => {
   const [rows] = await pool.execute(
     `
-    SELECT 
+    SELECT
       id,
       team_id,
       full_name,
@@ -261,21 +273,90 @@ const getTeamMemberById = async (teamId, playerId) => {
       joined_at,
       created_at,
       updated_at
-    FROM team_members 
+    FROM team_members
     WHERE team_id = ? AND id = ?
     LIMIT 1
     `,
-    [teamId, playerId],
+    [teamId, playerId]
   );
+
   return rows[0] || null;
 };
 
-// Xoá member khỏi team
+const addTeamMember = async (payload) => {
+  const {
+    teamId,
+    full_name,
+    image_url,
+    age,
+    height_cm,
+    weight_kg,
+    preferred_foot,
+    main_position,
+    jersey_number
+  } = payload;
+
+  await pool.execute(
+    `
+    INSERT INTO team_members (
+      id,
+      team_id,
+      full_name,
+      image_url,
+      age,
+      height_cm,
+      weight_kg,
+      preferred_foot,
+      main_position,
+      jersey_number,
+      joined_at,
+      created_at,
+      updated_at
+    )
+    VALUES (
+      UUID(),
+      ?, ?, ?, ?, ?, ?, ?, ?, ?,
+      CURRENT_DATE,
+      CURRENT_TIMESTAMP,
+      CURRENT_TIMESTAMP
+    )
+    `,
+    [
+      teamId,
+      full_name,
+      image_url,
+      age,
+      height_cm,
+      weight_kg,
+      preferred_foot,
+      main_position,
+      jersey_number
+    ]
+  );
+
+  const [rows] = await pool.execute(
+    `
+    SELECT *
+    FROM team_members
+    WHERE team_id = ?
+    ORDER BY created_at DESC
+    LIMIT 1
+    `,
+    [teamId]
+  );
+
+  return rows[0];
+};
+
 const deleteTeamMember = async (teamId, playerId) => {
   const [result] = await pool.execute(
-    `DELETE FROM team_members WHERE team_id = ? AND id = ?`,
+    `
+    DELETE FROM team_members
+    WHERE team_id = ? AND id = ?
+    `,
     [teamId, playerId]
   );
+
   return result.affectedRows;
 };
 
@@ -290,4 +371,3 @@ module.exports = {
   deleteTeamMember,
   getTeamsByManager,
   addTeamMember
-};
