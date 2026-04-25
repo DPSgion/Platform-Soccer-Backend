@@ -15,6 +15,7 @@ router.delete("/:teamId", authMiddleware(["ORGANIZER"]), teamController.deleteTe
 //TEAM MEMBERS
 
 router.get("/:teamId/members", teamController.getTeamMembers);
+router.post("/:teamId/members", teamController.addTeamMember);
 router.get("/:teamId/members/:playerId", teamController.getTeamMemberById);
 router.delete("/:teamId/members/:playerId",teamController.deleteTeamMember);
 
