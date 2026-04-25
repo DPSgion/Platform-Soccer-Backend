@@ -88,31 +88,50 @@ const addMatchTracking = async (req, res) => {
 };
 
 const setMatchResult = async (req, res, next) => {
-    try {
-      const { action } = req.body;
-      const { matchId } = req.params;
-      const userId = req.user.id;
+  try {
+    const { action, homeScore, awayScore } = req.body;
+    const { matchId } = req.params;
+    const userId = req.user.id;
 
-      let result;
+    let result;
 
-      if (action === "END") {
-        result = await matchService.endMatch(matchId, userId);
-      } else {
-        // default = UPDATE SCORE
-        result = await matchService.updateMatchScore(matchId, req.body, userId);
+    if (action === "END") {
+      if (homeScore === undefined || awayScore === undefined) {
+        throw new Error("Score is required when ending match");
       }
 
-      return res.status(200).json({
-        success: true,
-        message:
-          action === "END"
-            ? "Match ended successfully"
-            : "Score updated successfully",
-        data: result,
+      result = await matchService.endMatch(
+        matchId,
+        {
+          homeScore,
+          awayScore,
+        },
+        userId,
+      );
+    } else if (action === "UPDATE") {
+      result = await matchService.updateMatchScore(
+        matchId,
+        { homeScore, awayScore },
+        userId,
+      );
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid action",
       });
-    } catch (error) {
-      return next(error);
     }
+
+    return res.status(200).json({
+      success: true,
+      message:
+        action === "END"
+          ? "Match ended successfully"
+          : "Score updated successfully",
+      data: result,
+    });
+  } catch (error) {
+    return next(error);
+  }
 };
 const getOrganizerMatches = async (req, res, next) => {
     try {
