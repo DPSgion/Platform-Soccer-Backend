@@ -312,6 +312,7 @@ const uploadKit = async (req, res, next) => {
     return res.status(200).json({ success: true, message: "Kit uploaded", data: { kit_url: newKits } });
   } catch (error) { return next(error); }
 };
+
 const addTeamMember = async (req, res, next) => {
   try {
     const { teamId } = req.params;
@@ -326,7 +327,7 @@ const addTeamMember = async (req, res, next) => {
     }
 
     // Kiểm tra dữ liệu đầu vào
-    if (!full_name || !image_url || !age || !height_cm || !weight_kg || !preferred_foot || !main_position || !jersey_number) {
+    if (!full_name || !age || !height_cm || !weight_kg || !preferred_foot || !main_position || !jersey_number) {
       return res.status(400).json({
         success: false,
         message: "All member details are required"
