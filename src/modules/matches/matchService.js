@@ -339,29 +339,15 @@ exports.createMatch = async (data, organizerId) => {
       throw new AppError("One or both teams not found", 404, "TEAM_NOT_FOUND");
     }
 
-    const [registrationRows] = await connection.query(
-      `SELECT team_id, status
-       FROM tournament_teams
-       WHERE tournament_id = ? AND team_id IN (?, ?)`,
-      [payload.tournamentId, payload.homeTeamId, payload.awayTeamId],
+    await connection.query(
+      `INSERT INTO tournament_teams (tournament_id, team_id, status)
+       VALUES (?, ?, 'APPROVED'), (?, ?, 'APPROVED')
+       ON DUPLICATE KEY UPDATE status = 'APPROVED'`,
+      [
+        payload.tournamentId, payload.homeTeamId,
+        payload.tournamentId, payload.awayTeamId
+      ]
     );
-
-    if (registrationRows.length !== 2) {
-      throw new AppError(
-        "One or both teams are not registered in this tournament",
-        400,
-        "TEAM_NOT_REGISTERED_IN_TOURNAMENT",
-      );
-    }
-
-    const notApprovedTeam = registrationRows.find((item) => item.status !== "APPROVED");
-    if (notApprovedTeam) {
-      throw new AppError(
-        "All teams must be APPROVED before scheduling a match",
-        400,
-        "TEAM_NOT_APPROVED",
-      );
-    }
 
     const [duplicateRows] = await connection.query(
       `SELECT id
