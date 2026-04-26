@@ -14,11 +14,13 @@ let realAwayTeamId = null;
 beforeAll(async () => {
     try {
         const loginRes = await axios.post(LOGIN_URL, {
-            email: "test_moi_123@gmail.com",
+            email: "minhngoc1907204@gmail.com",
             password: "12345678"
         });
 
         const token = loginRes.data?.data?.token;
+        console.log("TOKEN LẤY ĐƯỢC:", token);
+
         api = axios.create({
             baseURL: BASE_URL,
             headers: { Authorization: `Bearer ${token}` },
@@ -141,7 +143,7 @@ describe("HỆ THỐNG QUẢN LÝ TRẬN ĐẤU - KIỂM THỬ DỮ LIỆU THẬ
             });
 
             if (res.status === 500) {
-                console.error("🚨 BUG: Backend crash (500) khi thiếu score field.");
+                console.error("BUG: Backend crash (500) khi thiếu score field.");
             }
 
             expect([400, 500]).toContain(res.status);
