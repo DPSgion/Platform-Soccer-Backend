@@ -9,10 +9,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Run k6
-        run: |
-          k6 run k6/team-load-test.js k6/match-load-test.js
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run Team Load Test
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: k6/team-load-test.js
         env:
           TOKEN: ${{ secrets.TOKEN }}
+
+      - name: Run Match Load Test
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: k6/match-load-test.js
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+
