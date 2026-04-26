@@ -19,13 +19,7 @@ jobs:
         env:
           TOKEN: ${{ secrets.TOKEN }}
 
-      - name: Run Match Load Test
-        uses: grafana/k6-action@v0.3.1
-        with:
-          filename: k6/match-load-test.js
-        env:
-          TOKEN: ${{ secrets.TOKEN }}
-
+        
       - name: Run Auth Load Test
         uses: grafana/k6-action@v0.3.1
         with:
@@ -39,3 +33,12 @@ jobs:
           filename: k6/dashboardPublic-load-test.js
         env:
           TOKEN: ${{ secrets.TOKEN }}
+          
+          
+      - name: Run Match Load Test
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: k6/match-load-test.js
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+
