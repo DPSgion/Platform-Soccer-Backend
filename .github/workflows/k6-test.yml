@@ -26,3 +26,16 @@ jobs:
         env:
           TOKEN: ${{ secrets.TOKEN }}
 
+      - name: Run Auth Load Test
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: k6/auth-load-test.js
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+
+      - name: Run Dashboard Pulic Load Test
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: k6/dashboardPublic-load-test.js
+        env:
+          TOKEN: ${{ secrets.TOKEN }}

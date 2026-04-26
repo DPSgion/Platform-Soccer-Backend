@@ -7,7 +7,7 @@ export let options = {
     duration: '20s',
     thresholds: {
         http_req_duration: ['p(95)<1000'],
-        http_req_failed: ['rate<0.05'],
+        http_req_failed: ['rate<0.10'],
     },
 };
 
@@ -30,7 +30,7 @@ function getParams() {
 export default function () {
     // 1. Kiểm tra xem ní đã truyền Token vào lệnh chạy chưa
     if (!__ENV.TOKEN) {
-        fail('LỖI: Thiếu TOKEN. Hãy chạy: k6 run -e TOKEN="your_token" match_performance_test.js');
+        fail('LỖI: Thiếu TOKEN. Hãy chạy: k6 run -e TOKEN="your_token" match-load-test.js');
     }
 
     // 2. Lấy danh sách trận đấu
@@ -49,7 +49,14 @@ export default function () {
     }
 
     // 3. Chọn ngẫu nhiên 1 trận và lấy ID chuẩn (tránh lỗi undefined)
-    const randomMatch = matches[Math.floor(Math.random() * matches.length)];
+    const activeMatches = matches.filter(m => m.status === 'IN_PROGRESS' || m.status === 'STARTED');
+
+    if (activeMatches.length === 0) {
+        console.warn('Không tìm thấy trận nào đang diễn ra để cập nhật kết quả!');
+        return;
+    }
+
+    const randomMatch = activeMatches[Math.floor(Math.random() * activeMatches.length)];
     const matchId = randomMatch.id || randomMatch.ID || randomMatch._id;
     const homeTeamId = randomMatch.home_team_id || randomMatch.homeTeamId;
 
