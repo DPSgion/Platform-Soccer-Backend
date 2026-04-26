@@ -18,7 +18,6 @@ beforeAll(async () => {
             full_name: "N Test"
         });
 
-        // ĐÂY LÀ DÒNG IN LOG GIỐNG Y HỆT YÊU CẦU CỦA BẠN
         console.log("LOGIN:", JSON.stringify(res.data, null, 2));
 
         const token = res.data?.data?.token;
@@ -73,7 +72,6 @@ describe("I. HAPPY CASE", () => {
         const newName = "Tên Cập Nhật TC04";
         const res = await api.put("/users/me", { full_name: newName });
 
-        // Nếu nhận 404, hãy kiểm tra lại Route trong Backend
         expect(res.status).toBe(200);
         expect(res.data.data.full_name).toBe(newName);
     });
@@ -89,7 +87,6 @@ describe("I. HAPPY CASE", () => {
     test("TC06 - Cập nhật SĐT đúng định dạng (đầu +84)", async () => {
         const res = await api.put("/users/me", { phone: "+84912888999" });
         expect(res.status).toBe(200);
-        // Lưu ý: Tùy Backend trả về giữ nguyên +84 hoặc convert sang 0, bạn chỉnh lại expect nhé
         expect(res.data.data.phone).toContain("912888999");
     });
 
@@ -150,7 +147,7 @@ describe("II. UNHAPPY CASE", () => {
         expect([400, 500, 404]).toContain(res.status);
     });
 
-    // --- PHẦN TEST PHONE ĐƯỢC VIẾT LẠI CHI TIẾT ---
+    // --- PHẦN TEST PHONE ĐƯỢC VIẾT CHI TIẾT ---
     const invalidPhones = [
         { val: "012345678", desc: "Thiếu số (chỉ có 9 số)" },
         { val: "01234567890", desc: "Thừa số (11 số)" },
@@ -165,9 +162,6 @@ describe("II. UNHAPPY CASE", () => {
     invalidPhones.forEach((item) => {
         test(`TC13 - Cập nhật SĐT sai định dạng: ${item.desc} (${item.val})`, async () => {
             const res = await api.put("/users/me", { phone: item.val });
-
-            // Thông thường lỗi validation phải là 400.
-            // Nếu API của bạn chưa chuẩn có thể trả 404 hoặc 500, mình để mảng để test không bị gãy
             expect([400, 422, 404]).toContain(res.status);
         });
     });
@@ -175,8 +169,6 @@ describe("II. UNHAPPY CASE", () => {
     test("TC14 - Upload không có file", async () => {
         const form = new FormData();
 
-        // Thay vì để trống, hãy gửi field 'avatar' nhưng giá trị là rỗng/null
-        // Điều này giúp Multer nhận diện đúng field name nhưng req.file sẽ vẫn undefined
         form.append("avatar", "");
 
         const res = await api.post("/users/me/avatar", form, {
@@ -186,7 +178,7 @@ describe("II. UNHAPPY CASE", () => {
         }).catch(err => err.response);
 
         expect(res).toBeDefined();
-        expect(res.status).toBe(400); // Bây giờ nó sẽ ra 400 chuẩn như Postman
+        expect(res.status).toBe(400);
         expect(res.data.message).toBe("No file uploaded");
     });
 

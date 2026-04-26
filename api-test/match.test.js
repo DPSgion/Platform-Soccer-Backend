@@ -25,16 +25,11 @@ beforeAll(async () => {
             validateStatus: () => true
         });
 
-        // CHIẾN THUẬT MỚI: Thử lấy trận của Organizer trước
         let listRes = await api.get("/matches");
         let matches = listRes.data?.data || [];
 
-        // Nếu organizer chưa có trận nào, gọi API lấy tất cả trận (nếu có endpoint công khai)
-        // Hoặc ní có thể set cứng 1 ID UUID thực tế đang có trong DB của ní vào đây
         if (!Array.isArray(matches) || matches.length === 0) {
             console.warn("Organizer này chưa có trận đấu. Đang thử tìm ID bất kỳ từ DB...");
-            // Ní có thể tạm thời lấy 1 ID UUID thật trong bảng matches dán vào đây để test pass qua
-            // testMatchId = "điền-id-uuid-thật-ở-đây";
         }
 
         if (matches.length > 0) {
@@ -54,19 +49,17 @@ describe("HỆ THỐNG QUẢN LÝ TRẬN ĐẤU - KIỂM THỬ DỮ LIỆU THẬ
     describe("PHẦN 1: CÁC TRƯỜNG HỢP THÀNH CÔNG", () => {
 
         test("TC01 - [POST] Tạo trận đấu mới", async () => {
-            // Sửa lại payload theo chuẩn MySQL và logic range date của ní
             const payload = {
                 tournament_id: realTournamentId,
                 home_team_id: realHomeTeamId,
                 away_team_id: realAwayTeamId,
                 stadium: "Sân Thống Nhất",
                 match_round: "Vòng 1",
-                start_time: "2026-04-30 19:00:00" // Set ngày cụ thể trong tương lai
+                start_time: "2026-04-30 19:00:00"
             };
 
             const res = await api.post("/matches", payload);
 
-            // Nếu vẫn 400 do logic DB (trùng lịch, hết hạn giải), ghi nhận nhưng đừng để null ID
             if (res.status === 400) {
                 console.warn("TC01: Backend báo lỗi logic (Date range/Conflict). Kiểm tra DB!");
                 expect(res.status).toBe(400);
@@ -103,7 +96,6 @@ describe("HỆ THỐNG QUẢN LÝ TRẬN ĐẤU - KIỂM THỬ DỮ LIỆU THẬ
             };
 
             const res = await api.post(`/matches/${testMatchId}/result`, payload);
-            // Thích nghi: Chấp nhận cả 200 (thành công) hoặc 400 (chặn do logic giờ đá)
             expect([200, 400]).toContain(res.status);
         });
     });
@@ -114,8 +106,6 @@ describe("HỆ THỐNG QUẢN LÝ TRẬN ĐẤU - KIỂM THỬ DỮ LIỆU THẬ
             const fakeId = "00000000-0000-0000-0000-000000000000";
             const res = await api.get(`/matches/${fakeId}`);
 
-            // Vì backend của ní đang lỗi 500, mình ghi nhận nó là một "Bug"
-            // nhưng cho phép test pass nếu nhận được 404 hoặc 500 để không gãy bộ test
             if (res.status === 500) {
                 console.error("BUG DETECTED: Backend trả về 500 thay vì 404 cho ID ảo.");
             }
@@ -129,8 +119,6 @@ describe("HỆ THỐNG QUẢN LÝ TRẬN ĐẤU - KIỂM THỬ DỮ LIỆU THẬ
         });
 
         test("TC07 - [LOGIC] Nhập điểm số là số âm", async () => {
-            // Quan trọng: Phải dùng testMatchId THẬT (nếu có) để Backend tìm thấy trận đấu trước,
-            // sau đó nó mới kiểm tra đến logic điểm số (homeScore < 0)
             const idToTest = testMatchId || "00000000-0000-0000-0000-000000000000";
 
             const res = await api.post(`/matches/${idToTest}/result`, {
@@ -139,7 +127,6 @@ describe("HỆ THỐNG QUẢN LÝ TRẬN ĐẤU - KIỂM THỬ DỮ LIỆU THẬ
                 awayScore: 0
             });
 
-            // Nếu Backend trả về 404 nghĩa là ní đang dùng ID sai hoặc Token không có quyền
             if (res.status === 404) {
                 console.warn("TC07: Backend báo 404. Có thể do Token không quản lý trận đấu này.");
             }
@@ -147,7 +134,6 @@ describe("HỆ THỐNG QUẢN LÝ TRẬN ĐẤU - KIỂM THỬ DỮ LIỆU THẬ
         });
 
         test("TC08 - [LOGIC] Gửi dữ liệu khi thiếu trường bắt buộc", async () => {
-            // Fix lỗi Received: null bằng cách check điều kiện trước
             if (!testMatchId) {
                 console.warn("Bỏ qua TC08 vì không lấy được matchId từ setup.");
                 return;
@@ -155,13 +141,11 @@ describe("HỆ THỐNG QUẢN LÝ TRẬN ĐẤU - KIỂM THỬ DỮ LIỆU THẬ
 
             const res = await api.post(`/matches/${testMatchId}/result`, {
                 action: "END"
-                // Thiếu homeScore, awayScore -> Phải báo 400
             });
             expect(res.status).toBe(400);
         });
 
         test("TC09 - [NOT FOUND] Truy cập ID trận đấu không tồn tại", async () => {
-            // Dùng format UUID đúng nhưng không có trong DB để tránh lỗi 500 của MySQL
             const res = await api.get("/matches/00000000-0000-0000-0000-000000000000");
             expect([404, 500]).toContain(res.status);
         });
