@@ -1,11 +1,20 @@
 const matchService = require('./matchService');
+const { AppError } = require('../../middlewares/errorMiddleware');
 
-const createMatch = async (req, res) => {
+const createMatch = async (req, res, next) => {
     try {
-        const match = await matchService.createMatch(req.body);
-        res.status(201).json({ success: true, data: match });
+        if (!req.user || !req.user.id) {
+            return next(new AppError("Unauthorized", 401, "UNAUTHORIZED"));
+        }
+
+        const match = await matchService.createMatch(req.body, req.user.id);
+        return res.status(201).json({
+            success: true,
+            message: "Match created successfully",
+            data: match
+        });
     } catch (error) {
-        res.status(400).json({ success: false, message: error.message });
+        return next(error);
     }
 };
 
@@ -79,21 +88,50 @@ const addMatchTracking = async (req, res) => {
 };
 
 const setMatchResult = async (req, res, next) => {
-    try {
-        const result = await matchService.setMatchResult(
-            req.params.matchId,
-            req.body,
-            req.user.id, // 🔥 QUAN TRỌNG
-        );
+  try {
+    const { action, homeScore, awayScore } = req.body;
+    const { matchId } = req.params;
+    const userId = req.user.id;
 
-        return res.status(200).json({
-            success: true,
-            message: "Set match result successfully",
-            data: result,
-        });
-    } catch (error) {
-        return next(error);
+    let result;
+
+    if (action === "END") {
+      if (homeScore === undefined || awayScore === undefined) {
+        throw new Error("Score is required when ending match");
+      }
+
+      result = await matchService.endMatch(
+        matchId,
+        {
+          homeScore,
+          awayScore,
+        },
+        userId,
+      );
+    } else if (action === "UPDATE") {
+      result = await matchService.updateMatchScore(
+        matchId,
+        { homeScore, awayScore },
+        userId,
+      );
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid action",
+      });
     }
+
+    return res.status(200).json({
+      success: true,
+      message:
+        action === "END"
+          ? "Match ended successfully"
+          : "Score updated successfully",
+      data: result,
+    });
+  } catch (error) {
+    return next(error);
+  }
 };
 const getOrganizerMatches = async (req, res, next) => {
     try {

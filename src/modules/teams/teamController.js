@@ -250,22 +250,36 @@ const deleteTeam = async (req, res, next) => {
 };
 
 //MEMBERS
-const getTeamMembers = (req, res) => {
-  const { teamId } = req.params;
-  const members = teamService.getTeamMembers(teamId); 
-  if (members.length === 0) {
-    return res.status(404).json({
-      success: false,
-      message: "No members found for this team",
-      data: null
+const getTeamMembers = async (req, res, next) => {
+  try {
+    const { teamId } = req.params;
+
+    if (!teamId) {
+      return res.status(400).json({
+        success: false,
+        message: "teamId is required",
+      });
+    }
+
+    const members = await teamService.getTeamMembers(teamId);
+
+    if (!members || members.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No members found for this team",
+        data: null,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Get team members successfully",
+      data: members,
     });
+  } catch (error) {
+    return next(error);
   }
-  return res.status(200).json({
-    success: true,
-    message: "Get team members successfully",
-    data: members
-  });
-}
+};
 const getTeamMemberById = async (req, res, next) => {
   try {
     const { teamId, playerId } = req.params;
@@ -313,6 +327,52 @@ const uploadKit = async (req, res, next) => {
   } catch (error) { return next(error); }
 };
 
+const addTeamMember = async (req, res, next) => {
+  try {
+    const { teamId } = req.params;
+    const { full_name, age, height_cm, weight_kg, preferred_foot, main_position, jersey_number } = req.body;
+
+    // Upload file hình ảnh lên OCI nếu có, nếu không thì dùng image_url từ body
+    let image_url = "";
+    if (req.file) {
+      image_url = await uploadFileToOCI(req.file);
+    } else if (req.body.image_url) {
+      image_url = req.body.image_url;
+    }
+
+    // Kiểm tra dữ liệu đầu vào
+    if (!full_name || !age || !height_cm || !weight_kg || !preferred_foot || !main_position || !jersey_number) {
+      return res.status(400).json({
+        success: false,
+        message: "All member details are required"
+      });
+    }
+
+    // Gọi đến teamService để tạo thành viên mới
+    const newMember = await teamService.addTeamMember({
+      teamId,
+      full_name,
+      image_url,
+      age,
+      height_cm,
+      weight_kg,
+      preferred_foot,
+      main_position,
+      jersey_number
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Member added successfully",
+      data: newMember
+    });
+  } catch (error) {
+    console.error("Error in addTeamMember:", error);
+    return next(error);
+  }
+};
+
+
 module.exports = {
   createTeam,
   getAllTeams,
@@ -323,5 +383,6 @@ module.exports = {
   getTeamMemberById,
   uploadLogo,
   uploadKit,
-  deleteTeamMember
+  deleteTeamMember,
+  addTeamMember
 };

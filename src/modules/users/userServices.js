@@ -26,6 +26,14 @@ const updateUser = async (userId, data) => {
     }
 
     if (data.phone !== undefined) {
+        const phone = data.phone.replace(/\s/g, "");
+
+        const phoneRegex = /^(0|\+84)[0-9]{9}$/;
+
+        if (!phoneRegex.test(phone)) {
+            throw new Error("Invalid phone number format");
+        }
+        
         fields.push("phone = ?");
         values.push(data.phone);
     }

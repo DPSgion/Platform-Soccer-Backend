@@ -2,49 +2,38 @@ const dashboardPublicService = require("./dashboardPublicService");
 const { AppError } = require("../../middlewares/errorMiddleware");
 
 // GET TOURNAMENTS
-const getTournaments = async (req, res) => {
+const getTournaments = async (req, res, next) => {
   try {
     const data = await dashboardPublicService.getTournaments();
 
-    return res.status(200).json({
+    res.json({
       success: true,
-      message: "Get tournaments successfully",
       data,
     });
-  } catch (err) {
-    return res.status(err.statusCode || 500).json({
-      success: false,
-      code: err.code || "INTERNAL_ERROR",
-      message: err.message || "Internal Server Error",
-      data: null,
-    });
+  } catch (error) {
+    next(error);
   }
 };
 
 // GET TOURNAMENT MATCHES
-const getTournamentMatches = async (req, res) => {
+const getTournamentMatches = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    if (!id) {
-      throw new AppError("Tournament id is required", 400, "VALIDATION_ERROR");
-    }
-
     const data = await dashboardPublicService.getTournamentMatches(id);
 
-    return res.status(200).json({
+    res.json({
       success: true,
-      message: "Get tournament matches successfully",
       data,
     });
-  } catch (err) {
-    return res.status(err.statusCode || 500).json({
-      success: false,
-      code: err.code || "INTERNAL_ERROR",
-      message: err.message || "Internal Server Error",
-      data: null,
-    });
+  } catch (error) {
+    next(error);
   }
+};
+
+module.exports = {
+  getTournaments,
+  getTournamentMatches,
 };
 
 const getTeams = async (req, res) => {

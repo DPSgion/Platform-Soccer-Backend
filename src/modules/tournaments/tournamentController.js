@@ -1,41 +1,102 @@
 const tournamentService = require("./tournamentService");
 
-exports.getAllTournaments = (req, res) => {
-    const data = tournamentService.getAll();
-    res.json(data);
+const getAllTournaments = async (req, res, next) => {
+    try {
+        const organizerId = req.user.id;
+        const data = await tournamentService.getAllTournaments(organizerId);
+        return res.status(200).json({ success: true, data });
+    } catch (error) {
+        return next(error);
+    }
 };
 
-exports.createTournament = (req, res) => {
-    const data = tournamentService.create(req.body);
-    res.json(data);
-};
-
-exports.updateTournament = (req, res) => {
+const updateTournament = async (req, res) => {
+  try {
     const { id } = req.params;
-    const data = tournamentService.update(id, req.body);
-    res.json(data);
+    const data = req.body;
+
+    const result = await tournamentService.updateTournament(id, data);
+
+    return res.status(200).json({
+      success: true,
+      message: "Update tournament successfully",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      message: error.message,
+    });
+  }
 };
 
-exports.deleteTournament = (req, res) => {
-    const { id } = req.params;
-    const data = tournamentService.delete(id);
-    res.json(data);
+const deleteTournament = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const organizerId = req.user.id;
+        await tournamentService.deleteTournament(id, organizerId);
+        return res.status(200).json({ success: true, message: "Tournament deleted successfully" });
+    } catch (error) {
+        const statusCode = error.statusCode || 500;
+        return res.status(statusCode).json({ success: false, code: error.code, message: error.message });
+    }
 };
 
-exports.getTournamentDetails = (req, res) => {
+const getTournamentDetails = (req, res) => {
     const { id } = req.params;
     const data = tournamentService.getDetails(id);
     res.json(data);
 };
 
-exports.registerTeam = (req, res) => {
+const registerTeam = (req, res) => {
     const { id } = req.params;
     const data = tournamentService.registerTeam(id, req.body);
     res.json(data);
 };
 
-exports.getTournamentProfile = (req, res) => {
+const getTournamentProfile = (req, res) => {
     const { id } = req.params;
     const data = tournamentService.getProfile(id);
     res.json(data);
+};
+const createTournament = async (req, res, next) => {
+    try {
+        const { name, description, format, start_date, end_date } = req.body;
+
+        const organizer_id = req.user.id; // 👉 dùng auth
+
+        if (!name || !format || !start_date || !end_date) {
+            return res.status(400).json({
+                message: "Thiếu thông tin bắt buộc"
+            });
+        }
+
+        const result = await tournamentService.createTournament({
+            name,
+            description,
+            format,
+            start_date,
+            end_date,
+            organizer_id,
+            logo_url: req.body.logo_url || ""
+        });
+
+        return res.status(201).json({
+            success: true,
+            data: result.data
+        });
+
+    } catch (error) {
+        return next(error);
+    }
+};
+
+
+module.exports = {
+    getAllTournaments,
+    createTournament,
+    updateTournament,
+    deleteTournament,
+    getTournamentDetails,
+    registerTeam,
+    getTournamentProfile
 };

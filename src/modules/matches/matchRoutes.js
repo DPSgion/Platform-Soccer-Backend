@@ -3,7 +3,7 @@ const router = express.Router();
 const matchController = require('./matchController');
 const { authMiddleware } = require("../../middlewares/authMiddleware");
 // Tạo trận đấu
-router.post('/', matchController.createMatch);
+router.post('/', authMiddleware(["ORGANIZER"]), matchController.createMatch);
 // Xem chi tiết trận đấu
 router.get('/:matchId', authMiddleware(["ORGANIZER"]), matchController.getMatchDetail);
 // Cập nhật trạng thái trận đấu
