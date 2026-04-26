@@ -39,9 +39,10 @@ TRƯỜNG HỢP ĐÃ CÓ PROJECT
     + Có thể chạy tất cả test: npm test
     ⚠️ Lưu ý:  file auth.test.js cài thêm npm install zod
 
-5. Lấy Token:
+5. Lấy Token (Dùng Postman):
 - Gọi API login:
     + POST /auth/login
+    -> https://backend.cupzone.fun/auth/login
 - Nhập body ví dụ: 
     {
     "email": "test123@gmail.com",
@@ -50,6 +51,8 @@ TRƯỜNG HỢP ĐÃ CÓ PROJECT
 - Nhấn Send → copy token trong response để test
 
 6. Chạy load test (k6): 
+- Tải k6:
+    + Gõ: choco install k6
 - Chạy test:
     + Gõ: k6 run -e TOKEN=TOKEN_CUA_BAN k6/team-load-test.js
 
