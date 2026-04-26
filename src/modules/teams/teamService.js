@@ -253,8 +253,18 @@ async function getTeamsByManager(managerId) {
 
 // ===== TEAM MEMBERS =====
 
-const getTeamMembers = (teamId) =>
-  teamMembers.filter((member) => member.team_id === teamId);
+const getTeamMembers = async (teamId) =>
+{
+  const [rows] = await pool.execute(
+    `
+    SELECT *
+    from team_members
+    where team_id = ?
+    `,
+    [teamId]
+  );
+  return rows;
+}
 
 const getTeamMemberById = async (teamId, playerId) => {
   const [rows] = await pool.execute(
