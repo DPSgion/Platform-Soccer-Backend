@@ -73,14 +73,12 @@ describe("I. HAPPY CASE", () => {
         const newName = "Tên Cập Nhật TC04";
         const res = await api.put("/users/me", { full_name: newName });
 
+        // Nếu nhận 404, hãy kiểm tra lại Route trong Backend
         expect(res.status).toBe(200);
         expect(res.data.data.full_name).toBe(newName);
-
-        // THÊM DÒNG NÀY: Cập nhật lại biến local để các test sau hoặc lần chạy sau đồng bộ
-        currentUser.full_name = newName;
     });
 
-    test("TC05 - Cập nhật chỉ phone", async () => {
+    test("TC05 - Cập nhật chỉ phone đúng định dạng (đầu 0)", async () => {
         const newPhone = "0912888999";
         const res = await api.put("/users/me", { phone: newPhone });
 
@@ -88,7 +86,14 @@ describe("I. HAPPY CASE", () => {
         expect(res.data.data.phone).toBe(newPhone);
     });
 
-    test("TC06 - Cập nhật toàn bộ thông tin", async () => {
+    test("TC06 - Cập nhật SĐT đúng định dạng (đầu +84)", async () => {
+        const res = await api.put("/users/me", { phone: "+84912888999" });
+        expect(res.status).toBe(200);
+        // Lưu ý: Tùy Backend trả về giữ nguyên +84 hoặc convert sang 0, bạn chỉnh lại expect nhé
+        expect(res.data.data.phone).toContain("912888999");
+    });
+
+    test("TC07 - Cập nhật toàn bộ thông tin", async () => {
         const payload = { full_name: "Cập Nhật Toàn Bộ", phone: "0888111222" };
         const res = await api.put("/users/me", payload);
 
@@ -97,7 +102,7 @@ describe("I. HAPPY CASE", () => {
         expect(res.data.data.phone).toBe(payload.phone);
     });
 
-    test("TC07 - Upload Avatar thành công", async () => {
+    test("TC08 - Upload Avatar thành công", async () => {
         const form = new FormData();
         const imagePath = path.join(__dirname, "test-avatar.png");
 
@@ -109,7 +114,7 @@ describe("I. HAPPY CASE", () => {
             expect(res.status).toBe(200);
             expect(res.data.data.avatar_url).toContain("http");
         } else {
-            console.warn("⚠️ Bỏ qua TC08: Vui lòng thêm file 'test-avatar.png' vào thư mục test.");
+            console.warn("Bỏ qua TC08: Vui lòng thêm file 'test-avatar.png' vào thư mục test.");
         }
     });
 });
@@ -121,12 +126,12 @@ describe("I. HAPPY CASE", () => {
  */
 describe("II. UNHAPPY CASE", () => {
 
-    test("TC08 - Không có Token", async () => {
+    test("TC09 - Không có Token", async () => {
         const res = await axios.get(`${BASE_URL}/users`, { validateStatus: () => true });
         expect(res.status).toBe(401);
     });
 
-    test("TC09 - Token sai cấu trúc", async () => {
+    test("TC10 - Token sai cấu trúc", async () => {
         const res = await axios.get(`${BASE_URL}/users`, {
             headers: { Authorization: "Bearer token_sai_123" },
             validateStatus: () => true
@@ -134,45 +139,58 @@ describe("II. UNHAPPY CASE", () => {
         expect(res.status).toBe(401);
     });
 
-    test("TC10 - Body gửi lên rỗng", async () => {
+    test("TC11 - Body gửi lên rỗng", async () => {
         const res = await api.put("/users/me", {});
         expect(res.status).toBe(404);
         expect(res.data.message).toBe("No data to update");
     });
 
-    test("TC11 - Sai định dạng dữ liệu (full_name là Array)", async () => {
+    test("TC12 - Sai định dạng dữ liệu (full_name là Array)", async () => {
         const res = await api.put("/users/me", { full_name: ["Tên", "Mảng"] });
         expect([400, 500, 404]).toContain(res.status);
     });
 
-    test("TC12 - Cập nhật số điện thoại sai định dạng", async () => {
-        const res = await api.put("/users/me", { phone: "SỐ-ĐIỆN-THOẠI-SAI" });
-        expect([400, 404]).toContain(res.status);
+    // --- PHẦN TEST PHONE ĐƯỢC VIẾT LẠI CHI TIẾT ---
+    const invalidPhones = [
+        { val: "012345678", desc: "Thiếu số (chỉ có 9 số)" },
+        { val: "01234567890", desc: "Thừa số (11 số)" },
+        { val: "1234567890", desc: "Không bắt đầu bằng 0 hoặc +84" },
+        { val: "090-123456", desc: "Chứa ký tự đặc biệt (dấu gạch ngang)" },
+        { val: "090 123 456", desc: "Chứa khoảng trắng" },
+        { val: "090abc1234", desc: "Chứa chữ cái" },
+        { val: "+841234567", desc: "Đầu +84 nhưng không đủ 9 số sau đó" },
+        { val: "0@91234567", desc: "Chứa ký tự đặc biệt @" }
+    ];
+
+    invalidPhones.forEach((item) => {
+        test(`TC13 - Cập nhật SĐT sai định dạng: ${item.desc} (${item.val})`, async () => {
+            const res = await api.put("/users/me", { phone: item.val });
+
+            // Thông thường lỗi validation phải là 400.
+            // Nếu API của bạn chưa chuẩn có thể trả 404 hoặc 500, mình để mảng để test không bị gãy
+            expect([400, 422]).toContain(res.status);
+        });
     });
 
-    test("TC13 - Upload không có file", async () => {
+    test("TC14 - Upload không có file", async () => {
         const form = new FormData();
 
-        // Thêm field name "avatar" nhưng để giá trị rỗng hoặc không đính kèm file thực thụ
-        // Điều này giúp Backend nhận diện đúng field nhưng vẫn báo thiếu file
+        // Thay vì để trống, hãy gửi field 'avatar' nhưng giá trị là rỗng/null
+        // Điều này giúp Multer nhận diện đúng field name nhưng req.file sẽ vẫn undefined
         form.append("avatar", "");
 
-        // Gửi request và bắt error trả về từ Axios
         const res = await api.post("/users/me/avatar", form, {
-            headers: { ...form.getHeaders() }
-        }).catch(err => err.response); // Nếu lỗi, gán res = error.response
+            headers: {
+                ...form.getHeaders()
+            }
+        }).catch(err => err.response);
 
-        // 1. Kiểm tra xem res có tồn tại không (tránh sập test)
         expect(res).toBeDefined();
-
-        // 2. Kiểm tra status code (Nếu nhận 500, dòng này sẽ hiện lỗi đỏ cực đẹp cho bạn)
-        expect(res.status).toBe(400);
-
-        // 3. Kiểm tra message trả về
+        expect(res.status).toBe(400); // Bây giờ nó sẽ ra 400 chuẩn như Postman
         expect(res.data.message).toBe("No file uploaded");
     });
 
-    test("TC14 - Sai định dạng file (Gửi file .txt)", async () => {
+    test("TC15 - Sai định dạng file (Gửi file .txt)", async () => {
         const form = new FormData();
         form.append("avatar", Buffer.from("nội dung file văn bản"), "test.txt");
         const res = await api.post("/users/me/avatar", form, {
@@ -181,12 +199,12 @@ describe("II. UNHAPPY CASE", () => {
         expect([400, 500]).toContain(res.status);
     });
 
-    test("TC15 - Truy cập ID không tồn tại", async () => {
+    test("TC16 - Truy cập ID không tồn tại", async () => {
         const res = await api.put("/users/999999", { full_name: "Người dùng ma" });
         expect(res.status).toBe(404);
     });
 
-    test("TC16 - Lỗi kết nối Cloud (Mô phỏng)", async () => {
+    test("TC17 - Lỗi kết nối Cloud (Mô phỏng)", async () => {
         console.log("TC17 thường được test bằng cách mock function để giả lập Cloud bị sập.");
         expect(true).toBe(true);
     });
