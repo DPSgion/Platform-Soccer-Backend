@@ -1,7 +1,7 @@
 import http from 'k6/http';
-import { check, sleep, fail } from 'k6';
+import { check, sleep } from 'k6';
 
-// ================= CONFIGURATION =================
+// ================= CONFIG =================
 export let options = {
     vus: 5,
     duration: '20s',
@@ -13,82 +13,84 @@ export let options = {
 
 const BASE_URL = 'https://backend.cupzone.fun';
 
+// ================= VALIDATION =================
+if (!__ENV.TOKEN) {
+    throw new Error('THIẾU TOKEN: Hãy kiểm tra lại GitHub Secrets hoặc biến -e TOKEN trong lệnh chạy!');
+}
+
+// ================= HELPERS =================
 function getParams() {
     let token = __ENV.TOKEN;
-    if (token && !token.startsWith('Bearer ')) {
-        token = `Bearer ${token}`;
-    }
+    const authHeader = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
     return {
         headers: {
-            'Authorization': token,
+            'Authorization': authHeader,
             'Content-Type': 'application/json',
         },
     };
 }
 
-// ================= MAIN LOGIC =================
+// ================= MAIN TEST =================
 export default function () {
-    // 1. Kiểm tra xem ní đã truyền Token vào lệnh chạy chưa
-    if (!__ENV.TOKEN) {
-        fail('LỖI: Thiếu TOKEN. Hãy chạy: k6 run -e TOKEN="your_token" match-load-test.js');
-    }
-
-    // 2. Lấy danh sách trận đấu
+    // 1. LẤY DANH SÁCH TRẬN ĐẤU
     const resList = http.get(`${BASE_URL}/matches`, getParams());
 
-    check(resList, {
+    const listOk = check(resList, {
         '1. Get list matches OK': (r) => r.status === 200,
     });
 
-    const resJson = resList.json();
-    const matches = resJson.data || [];
-
-    if (matches.length === 0) {
-        console.warn('Tài khoản này chưa có trận đấu nào để test.');
+    if (!listOk) {
+        console.error(`FAILED: Get list matches trả về ${resList.status}`);
         return;
     }
 
-    // 3. Chọn ngẫu nhiên 1 trận và lấy ID chuẩn (tránh lỗi undefined)
-    const activeMatches = matches.filter(m => m.status === 'IN_PROGRESS' || m.status === 'STARTED');
+    const resJson = resList.json();
+    const matches = resJson?.data || [];
+
+    if (matches.length === 0) {
+        // Chỉ log 1 lần để tránh spam log
+        console.warn('⚠️ Tài khoản sạch bong, không có trận nào!');
+        return;
+    }
+
+    // 2. LỌC TRẬN ĐANG DIỄN RA (IN_PROGRESS hoặc STARTED)
+    const activeMatches = matches.filter(m =>
+        m.status === 'IN_PROGRESS' || m.status === 'STARTED'
+    );
 
     if (activeMatches.length === 0) {
-        console.warn('Không tìm thấy trận nào đang diễn ra để cập nhật kết quả!');
         return;
     }
 
     const randomMatch = activeMatches[Math.floor(Math.random() * activeMatches.length)];
-    const matchId = randomMatch.id || randomMatch.ID || randomMatch._id;
-    const homeTeamId = randomMatch.home_team_id || randomMatch.homeTeamId;
+    const matchId = randomMatch.id || randomMatch._id;
 
-    if (!matchId) {
-        console.error('Không tìm thấy ID trận đấu trong dữ liệu trả về!');
-        return;
-    }
+    sleep(1);
 
-    // 4. Xem chi tiết trận đấu
+    // 3. XEM CHI TIẾT TRẬN ĐẤU
     const resDetail = http.get(`${BASE_URL}/matches/${matchId}`, getParams());
     check(resDetail, {
-        '2. Xem chi tiết OK': (r) => r.status === 200,
+        '2. Xem chi tiết trận OK': (r) => r.status === 200,
     });
 
-    // 5. TEST CẬP NHẬT KẾT QUẢ (API này ní đã test thông trên Postman)
-    const resultPayload = JSON.stringify({
+    sleep(1);
+
+    // 4. CẬP NHẬT KẾT QUẢ (PHẦN QUAN TRỌNG NHẤT)
+    const payload = JSON.stringify({
         action: "UPDATE",
-        homeScore: Math.floor(Math.random() * 10), // Giả lập tỉ số ngẫu nhiên
-        awayScore: Math.floor(Math.random() * 10)
+        homeScore: Math.floor(Math.random() * 5),
+        awayScore: Math.floor(Math.random() * 5)
     });
 
-    const resResult = http.post(`${BASE_URL}/matches/${matchId}/result`, resultPayload, getParams());
+    const resUpdate = http.post(`${BASE_URL}/matches/${matchId}/result`, payload, getParams());
 
-    // Nếu lỗi, in ra để ní biết Backend báo gì (Thường là 400 - Match not started)
-    if (resResult.status !== 200) {
-        console.warn(`Match ${matchId} tạch: ${resResult.status} - ${resResult.body}`);
-    }
-
-    check(resResult, {
+    const updateOk = check(resUpdate, {
         '3. Cập nhật kết quả thành công': (r) => r.status === 200,
     });
 
-    // Nghỉ 1 giây trước khi người dùng ảo thực hiện lượt tiếp theo
+    if (!updateOk) {
+        console.warn(`Match ${matchId} tạch update: ${resUpdate.status} - ${resUpdate.body}`);
+    }
+
     sleep(1);
 }
