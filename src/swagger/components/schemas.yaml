@@ -1,0 +1,259 @@
+components:
+  schemas:
+
+    # =====================
+    # BASE ENTITIES
+    # =====================
+
+    Tournament:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          example: "1"
+        name:
+          type: string
+          example: "Cupzone Tournament 2026"
+        logo_url:
+          type: string
+        description:
+          type: string
+        format:
+          type: string
+          enum: [LEAGUE, KNOCKOUT]
+        start_date:
+          type: string
+        end_date:
+          type: string
+        status:
+          type: string
+        organizer_id:
+          type: string
+
+
+    Match:
+      type: object
+      properties:
+        id:
+          type: string
+        tournament_id:
+          type: string
+        home_team:
+          type: string
+        away_team:
+          type: string
+        home_score:
+          type: integer
+        away_score:
+          type: integer
+        stadium:
+          type: string
+        start_time:
+          type: string
+
+
+    # =====================
+    # TOURNAMENT RESPONSES
+    # =====================
+
+    TournamentListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tournament'
+
+
+    TournamentMatchesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            tournament:
+              $ref: '#/components/schemas/Tournament'
+            matches:
+              type: array
+              items:
+                $ref: '#/components/schemas/Match'
+
+
+    # =====================
+    # MATCH MODULE (FIX FULL)
+    # =====================
+
+    CreateMatchRequest:
+      type: object
+      required: [tournamentId, homeTeamId, awayTeamId]
+      properties:
+        tournamentId:
+          type: string
+        homeTeamId:
+          type: string
+        awayTeamId:
+          type: string
+        startTime:
+          type: string
+        venue:
+          type: object
+        round:
+          type: string
+        refereeName:
+          type: string
+
+
+    MatchResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/Match'
+
+
+    MatchDetailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+
+
+    UpdateMatchStatusRequest:
+      type: object
+      properties:
+        status:
+          type: string
+        liveMinute:
+          type: integer
+
+
+    UpdateMatchStatusResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+
+
+    SetLineupsRequest:
+      type: object
+      properties:
+        home:
+          type: object
+        away:
+          type: object
+
+
+    LineupsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+
+
+    AddEventRequest:
+      type: object
+      properties:
+        minute:
+          type: integer
+        type:
+          type: string
+        teamId:
+          type: string
+        playerName:
+          type: string
+
+
+    EventResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+
+
+    UpdateStatsRequest:
+      type: object
+      properties:
+        home:
+          type: object
+        away:
+          type: object
+
+
+    StatsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+
+
+    AddTrackingRequest:
+      type: object
+      properties:
+        teamId:
+          type: string
+        totalDistanceKm:
+          type: number
+        sprints:
+          type: integer
+        topSpeedKmh:
+          type: number
+
+
+    TrackingResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+
+
+    SetResultRequest:
+      type: object
+      properties:
+        homeScore:
+          type: integer
+        awayScore:
+          type: integer
+        winnerTeamId:
+          type: string
+
+
+    ResultResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+
+
+    # =====================
+    # COMMON
+    # =====================
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Tournament not found"

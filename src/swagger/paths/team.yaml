@@ -1,0 +1,112 @@
+paths:
+  /teams:
+    get:
+      summary: Lấy danh sách đội bóng
+      tags: [Teams]
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        country:
+                          type: string
+                        description:
+                          type: string
+                        logo_url:
+                          type: string
+                        kit_url:
+                          type: array
+                          items:
+                            type: string
+              example:
+                success: true
+                message: Get teams successfully
+                data:
+                  - id: "t1"
+                    name: "Arsenal"
+                    country: "England"
+                    description: "Cau lac bo Arsenal de demo API."
+                    logo_url: "https://byvn.net/9g0n"
+                    kit_url:
+                      - "https://byvn.net/5W3n"
+                      - "https://byvn.net/J1bL"
+                  - id: "t2"
+                    name: "Manchester United"
+                    country: "England"
+                    description: "Cau lac bo Manchester United."
+                    logo_url: "https://byvn.net/TpsK"
+                    kit_url:
+                      - "https://byvn.net/NBYP"
+                      - "https://byvn.net/BAUE"
+
+  /teams/{teamId}:
+    get:
+      summary: Lấy chi tiết đội bóng
+      tags: [Teams]
+      parameters:
+        - in: path
+          name: teamId
+          required: true
+          schema:
+            type: string
+          description: ID đội bóng
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      country:
+                        type: string
+                      description:
+                        type: string
+                      logo_url:
+                        type: string
+                      kit_url:
+                        type: array
+                        items:
+                          type: string
+              example:
+                success: true
+                message: Get team successfully
+                data:
+                  id: "t1"
+                  name: "Arsenal"
+                  country: "England"
+                  description: "Cau lac bo Arsenal de demo API."
+                  logo_url: "https://byvn.net/9g0n"
+                  kit_url:
+                    - "https://byvn.net/5W3n"
+                    - "https://byvn.net/J1bL"
+
+        404:
+          description: Không tìm thấy đội bóng

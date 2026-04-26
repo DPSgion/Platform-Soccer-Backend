@@ -1,0 +1,234 @@
+paths:
+
+  /matches:
+    post:
+      tags: [Match]
+      summary: Create match
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMatchRequest'
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchResponse'
+
+        400:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+  /matches/{matchId}:
+    get:
+      tags: [Match]
+      summary: Get match detail
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "1"
+
+      responses:
+        200:
+          description: Match detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchDetailResponse'
+
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+  /matches/{matchId}/status:
+    put:
+      tags: [Match]
+      summary: Update match status
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMatchStatusRequest'
+
+      responses:
+        200:
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateMatchStatusResponse'
+
+
+  /matches/{matchId}/lineups:
+    get:
+      tags: [Match]
+      summary: Get lineups
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: Lineups
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LineupsResponse'
+
+    put:
+      tags: [Match]
+      summary: Set lineups
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetLineupsRequest'
+
+      responses:
+        200:
+          description: Updated lineups
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LineupsResponse'
+
+
+  /matches/{matchId}/events:
+    post:
+      tags: [Match]
+      summary: Add match event
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddEventRequest'
+
+      responses:
+        201:
+          description: Event added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResponse'
+
+
+  /matches/{matchId}/stats:
+    put:
+      tags: [Match]
+      summary: Update match stats
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStatsRequest'
+
+      responses:
+        200:
+          description: Updated stats
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatsResponse'
+
+
+  /matches/{matchId}/tracking:
+    post:
+      tags: [Match]
+      summary: Add tracking
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddTrackingRequest'
+
+      responses:
+        201:
+          description: Tracking added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackingResponse'
+
+
+  /matches/{matchId}/result:
+    post:
+      tags: [Match]
+      summary: Set match result
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetResultRequest'
+
+      responses:
+        200:
+          description: Result set
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultResponse'
