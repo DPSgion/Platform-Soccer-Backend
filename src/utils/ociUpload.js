@@ -13,7 +13,7 @@ const provider = new common.SimpleAuthenticationDetailsProvider(
     common.Region.fromRegionId(process.env.OCI_REGION || 'ap-singapore-1')
 );
 
-const client = new os.ObjectStorageClient({ authenticationDetailsProvider: provider });
+// const client = new os.ObjectStorageClient({ authenticationDetailsProvider: provider });
 
 const uploadFileToOCI = async (file) => {
     const namespace = 'axqv9e1of21u';
