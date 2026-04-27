@@ -1,184 +1,5 @@
 const db = require("../../dbConfig");
 const { AppError } = require("../../middlewares/errorMiddleware");
-let idCounter = 3;
-const matches = [
-  {
-    id: "1",
-    tournamentId: "t1",
-    title: "Neon Strike Cup - Match #042",
-    homeTeamId: "team-1",
-    awayTeamId: "team-2",
-    homeTeam: { id: "team-1", name: "Man City", logoUrl: "https://..." },
-    awayTeam: { id: "team-2", name: "Real Madrid", logoUrl: "https://..." },
-    startTime: "2026-03-31T19:30:00+07:00",
-    venue: { name: "Etihad Stadium", city: "Manchester", country: "England" },
-    round: "Round 5",
-    refereeName: "Szymon Marciniak",
-    status: "SCHEDULED",
-    score: { home: 0, away: 0 },
-    createdAt: "2026-03-31T10:00:00Z",
-    updatedAt: "2026-03-31T10:00:00Z",
-    attendance: 53000,
-    events: [
-      {
-        id: "e1",
-        minute: 23,
-        type: "GOAL",
-        teamId: "team-1",
-        playerId: "p1",
-        playerName: "Kevin De Bruyne",
-        assistPlayerId: "p2",
-        assistPlayerName: "Erling Haaland",
-        title: "GOAL",
-        description: "Assist: Erling Haaland",
-        createdAt: "2026-03-31T19:53:00+07:00",
-      },
-      {
-        id: "e2",
-        minute: 41,
-        type: "YELLOW_CARD",
-        teamId: "team-2",
-        playerId: "p3",
-        playerName: "Vinícius Júnior",
-        title: "CAUTION",
-        description: "Unsporting behavior",
-      },
-    ],
-    lineups: {
-      home: {
-        teamId: "team-1",
-        teamName: "Man City",
-        formation: "4-3-3",
-        startingXI: [
-          {
-            playerId: "p1",
-            playerName: "Ederson",
-            shirtNumber: 31,
-            position: "GK",
-            x: 50,
-            y: 90,
-          },
-          {
-            playerId: "p2",
-            playerName: "Kyle Walker",
-            shirtNumber: 2,
-            position: "RB",
-            x: 80,
-            y: 70,
-          },
-          {
-            playerId: "p3",
-            playerName: "Ruben Dias",
-            shirtNumber: 3,
-            position: "CB",
-            x: 60,
-            y: 70,
-          },
-        ],
-        substitutes: [
-          {
-            playerId: "p10",
-            playerName: "Phil Foden",
-            shirtNumber: 47,
-            position: "CM",
-          },
-        ],
-      },
-      away: {
-        teamId: "team-2",
-        teamName: "Real Madrid",
-        formation: "4-3-1-2",
-        startingXI: [
-          {
-            playerId: "p20",
-            playerName: "Courtois",
-            shirtNumber: 1,
-            position: "GK",
-            x: 50,
-            y: 10,
-          },
-        ],
-        substitutes: [],
-      },
-    },
-    stats: {
-      home: {
-        possessionPercent: 62,
-        shots: 18,
-        shotsOnTarget: 6,
-        fouls: 11,
-        corners: 8,
-        passes: 512,
-        passAccuracyPercent: 87.4,
-      },
-      away: {
-        possessionPercent: 38,
-        shots: 9,
-        shotsOnTarget: 3,
-        fouls: 14,
-        corners: 4,
-        passes: 331,
-        passAccuracyPercent: 79.1,
-      },
-    },
-    tracking: {
-      home: {
-        totalDistanceKm: 107.25,
-        sprints: 132,
-        topSpeedKmh: 34.8,
-      },
-      away: {
-        totalDistanceKm: 103.4,
-        sprints: 118,
-        topSpeedKmh: 33.9,
-      },
-    },
-    result: {
-      isFinal: true,
-      winnerTeamId: "team-1",
-      homeScore: 2,
-      awayScore: 1,
-      approved: true,
-    },
-    positionalDominance: {
-      dominantTeamId: "team-1",
-      zone: "FINAL_THIRD",
-      summary:
-        "Manchester City maintaining 72% intensity in the final third over the last 15 minutes.",
-    },
-    liveMinute: 88,
-  },
-];
-
-// Helper: default structure
-function getDefaultMatch(data) {
-  const now = new Date().toISOString();
-  return {
-    id: String(idCounter++),
-    tournamentId: data.tournamentId,
-    title: data.title || `Match ${idCounter}`,
-    homeTeamId: data.homeTeamId,
-    awayTeamId: data.awayTeamId,
-    startTime: data.startTime,
-    venue: data.venue,
-    round: data.round,
-    refereeName: data.refereeName,
-    status: data.status || "SCHEDULED",
-    score: { home: 0, away: 0 },
-    createdAt: now,
-    updatedAt: now,
-    attendance: data.attendance || null,
-    events: [],
-    lineups: {
-      home: { formation: "", startingXI: [], substitutes: [] },
-      away: { formation: "", startingXI: [], substitutes: [] },
-    },
-    stats: { home: {}, away: {} },
-    tracking: { home: {}, away: {} },
-    result: null,
-    positionalDominance: null,
-  };
-}
 
 function normalizeCreatePayload(data = {}) {
   const tournamentId = String(data.tournament_id ?? data.tournamentId ?? "").trim();
@@ -544,84 +365,136 @@ exports.getMatchDetail = async (matchId, userId) => {
 };
 
 exports.updateMatchStatus = async (matchId, payload) => {
-  const match = matches.find((m) => m.id === matchId);
-  if (!match) throw new Error("Match not found");
-  match.status = payload.status;
-  match.liveMinute = payload.liveMinute;
-  match.updatedAt = new Date().toISOString();
-  return {
-    id: match.id,
-    status: match.status,
-    liveMinute: match.liveMinute,
-    updatedAt: match.updatedAt,
-  };
+  const [rows] = await db.query('SELECT id FROM matches WHERE id = ?', [matchId]);
+  if (rows.length === 0) throw new AppError("Match not found", 404, "MATCH_NOT_FOUND");
+  
+  const status = payload.status;
+  const isActive = status === 'LIVE' ? 1 : 0;
+  await db.query('UPDATE matches SET is_active = ? WHERE id = ?', [isActive, matchId]);
+  
+  return { id: matchId, status, liveMinute: payload.liveMinute, updatedAt: new Date().toISOString() };
 };
 
 exports.getMatchLineups = async (matchId) => {
-  const match = matches.find((m) => m.id === matchId);
-  if (!match) throw new Error("Match not found");
-  return {
-    matchId: match.id,
-    home: match.lineups.home,
-    away: match.lineups.away,
-  };
+  const [matchRows] = await db.query('SELECT home_team_id, away_team_id FROM matches WHERE id = ?', [matchId]);
+  if (matchRows.length === 0) throw new AppError("Match not found", 404, "MATCH_NOT_FOUND");
+  const match = matchRows[0];
+
+  const [lineups] = await db.query(
+    'SELECT ml.*, tm.full_name, tm.jersey_number, tm.main_position, tm.image_url FROM match_lineups ml JOIN team_members tm ON ml.team_member_id = tm.id WHERE ml.match_id = ?',
+    [matchId]
+  );
+
+  const home = { startingXI: [], substitutes: [] };
+  const away = { startingXI: [], substitutes: [] };
+
+  lineups.forEach(row => {
+    const player = {
+      playerId: row.team_member_id,
+      playerName: row.full_name,
+      shirtNumber: row.jersey_number,
+      position: row.main_position,
+      imageUrl: row.image_url
+    };
+    const team = row.team_id === match.home_team_id ? home : away;
+    if (row.is_starting) team.startingXI.push(player);
+    else team.substitutes.push(player);
+  });
+
+  return { matchId, home, away };
 };
 
 exports.setMatchLineups = async (matchId, payload) => {
-  const match = matches.find((m) => m.id === matchId);
-  if (!match) throw new Error("Match not found");
-  match.lineups = payload;
-  match.updatedAt = new Date().toISOString();
-  return {
-    matchId: match.id,
-    home: match.lineups.home,
-    away: match.lineups.away,
-  };
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+    const [matchRows] = await connection.query('SELECT home_team_id, away_team_id FROM matches WHERE id = ?', [matchId]);
+    if (matchRows.length === 0) throw new AppError("Match not found", 404, "MATCH_NOT_FOUND");
+    const match = matchRows[0];
+
+    await connection.query('DELETE FROM match_lineups WHERE match_id = ?', [matchId]);
+
+    const insertLineups = async (teamId, data) => {
+      if (!data) return;
+      const { startingXI = [], substitutes = [] } = data;
+      for (const p of startingXI) {
+        await connection.query(
+          'INSERT INTO match_lineups (match_id, team_id, team_member_id, is_starting) VALUES (?, ?, ?, 1)',
+          [matchId, teamId, p.playerId || p.id]
+        );
+      }
+      for (const p of substitutes) {
+        await connection.query(
+          'INSERT INTO match_lineups (match_id, team_id, team_member_id, is_starting) VALUES (?, ?, ?, 0)',
+          [matchId, teamId, p.playerId || p.id]
+        );
+      }
+    };
+
+    await insertLineups(match.home_team_id, payload.home);
+    await insertLineups(match.away_team_id, payload.away);
+
+    await connection.commit();
+    return { matchId };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 };
 
 exports.addMatchEvent = async (matchId, payload) => {
-  const match = matches.find((m) => m.id === matchId);
-  if (!match) throw new Error("Match not found");
-  const event = {
-    id: String(Date.now()),
-    ...payload,
-    createdAt: new Date().toISOString(),
-    matchId: match.id,
-  };
-  match.events.push(event);
-  match.updatedAt = new Date().toISOString();
-  // Nếu là GOAL thì cập nhật tỉ số
+  const [matchRows] = await db.query('SELECT id FROM matches WHERE id = ?', [matchId]);
+  if (matchRows.length === 0) throw new AppError("Match not found", 404, "MATCH_NOT_FOUND");
+
+  await db.query(
+    'INSERT INTO match_events (match_id, team_id, team_member_id, event_type, minute, extra_data) VALUES (?, ?, ?, ?, ?, ?)',
+    [matchId, payload.teamId, payload.playerId, payload.type, payload.minute, JSON.stringify(payload)]
+  );
+  
   if (payload.type === "GOAL") {
-    if (payload.teamId === match.homeTeam.id) match.score.home++;
-    if (payload.teamId === match.awayTeam.id) match.score.away++;
+      const [match] = await db.query('SELECT home_team_id, away_team_id FROM matches WHERE id = ?', [matchId]);
+      if(match.length > 0) {
+          if (payload.teamId === match[0].home_team_id) await db.query('UPDATE matches SET home_score = home_score + 1 WHERE id = ?', [matchId]);
+          if (payload.teamId === match[0].away_team_id) await db.query('UPDATE matches SET away_score = away_score + 1 WHERE id = ?', [matchId]);
+      }
   }
-  return event;
+
+  return { matchId, ...payload };
 };
 
 exports.updateMatchStats = async (matchId, payload) => {
-  const match = matches.find((m) => m.id === matchId);
-  if (!match) throw new Error("Match not found");
-  match.stats = payload;
-  match.updatedAt = new Date().toISOString();
-  return {
-    matchId: match.id,
-    stats: match.stats,
-    updatedAt: match.updatedAt,
-  };
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+    const [matchRows] = await connection.query('SELECT home_team_id, away_team_id FROM matches WHERE id = ?', [matchId]);
+    if (matchRows.length === 0) throw new AppError("Match not found", 404, "MATCH_NOT_FOUND");
+    const match = matchRows[0];
+
+    const upsertStats = async (teamId, stats) => {
+      if (!stats) return;
+      await connection.query(
+        'INSERT INTO match_team_stats (match_id, team_id, ball_possession_percent, shots, shots_on_target, corners, fouls) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE ball_possession_percent = VALUES(ball_possession_percent), shots = VALUES(shots), shots_on_target = VALUES(shots_on_target), corners = VALUES(corners), fouls = VALUES(fouls)',
+        [matchId, teamId, stats.possessionPercent || 0, stats.shots || 0, stats.shotsOnTarget || 0, stats.corners || 0, stats.fouls || 0]
+      );
+    };
+
+    await upsertStats(match.home_team_id, payload.home);
+    await upsertStats(match.away_team_id, payload.away);
+
+    await connection.commit();
+    return { matchId };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 };
 
 exports.addMatchTracking = async (matchId, payload) => {
-  const match = matches.find((m) => m.id === matchId);
-  if (!match) throw new Error("Match not found");
-  // Phân loại tracking theo team
-  const teamType = payload.teamId === match.homeTeamId ? "home" : "away";
-  if (!match.tracking[teamType]) match.tracking[teamType] = {};
-  match.tracking[teamType] = {
-    ...payload,
-    createdAt: new Date().toISOString(),
-  };
-  match.updatedAt = new Date().toISOString();
-  return match.tracking[teamType];
+  return { matchId, status: "Tracking data not persisted (no DB table)", ...payload };
 };
 
 // Nhập kết quả trận đấu
