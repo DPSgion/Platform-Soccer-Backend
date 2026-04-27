@@ -18,7 +18,7 @@ const binFile = open('../api-test/test-avatar.png', 'b');
 export default function () {
     const token = __ENV.TOKEN;
     if (!token) {
-        console.error("Thiếu TOKEN rồi ní ơi!");
+        console.error("Thiếu TOKEN rồi!");
         return;
     }
 
