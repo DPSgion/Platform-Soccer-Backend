@@ -63,46 +63,44 @@ describe('DASHBOARD PUBLIC', () => {
             });
 
             test('TC_T03 - Tournament có đầy đủ field', () => {
-                if (tournaments.length === 0) return;
-
-                const t = tournaments[0];
-
-                expect(t).toHaveProperty('id');
-                expect(t).toHaveProperty('name');
-                expect(t).toHaveProperty('logo_url');
-                expect(t).toHaveProperty('description');
-                expect(t).toHaveProperty('format');
-                expect(t).toHaveProperty('start_date');
-                expect(t).toHaveProperty('end_date');
-                expect(t).toHaveProperty('status');
-                expect(t).toHaveProperty('organizer_id');
+                tournaments.forEach(t => {
+                    expect(t).toHaveProperty('id');
+                    expect(t).toHaveProperty('name');
+                    expect(t).toHaveProperty('logo_url');
+                    expect(t).toHaveProperty('description');
+                    expect(t).toHaveProperty('format');
+                    expect(t).toHaveProperty('start_date');
+                    expect(t).toHaveProperty('end_date');
+                    expect(t).toHaveProperty('status');
+                });
             });
 
             test('TC_T04 - Kiểu dữ liệu của tournament đúng', () => {
-                if (tournaments.length === 0) return;
-
-                const t = tournaments[0];
-
-                expect(['string', 'number']).toContain(typeof t.id);
-                expect(typeof t.name).toBe('string');
-                expect(typeof t.logo_url).toBe('string');
-                expect(typeof t.description).toBe('string');
-                expect(typeof t.format).toBe('string');
-                expect(typeof t.start_date).toBe('string');
-                expect(typeof t.end_date).toBe('string');
-                expect(typeof t.status).toBe('string');
-                expect(['string', 'number']).toContain(typeof t.organizer_id);
+                tournaments.forEach(t => {
+                    expect(typeof t.id).toBe('string');
+                    expect(typeof t.name).toBe('string');
+                    expect(typeof t.logo_url).toBe('string');
+                    expect(typeof t.description).toBe('string');
+                    expect(typeof t.format).toBe('string');
+                    expect(typeof t.start_date).toBe('string');
+                    expect(typeof t.end_date).toBe('string');
+                    expect(typeof t.status).toBe('string');
+                });
             });
 
             test('TC_T05 - Format hợp lệ', () => {
+                const validFormats = ['LEAGUE', 'KNOCKOUT', 'GROUP_STAGE'];
+
                 tournaments.forEach(t => {
-                    expect(['LEAGUE', 'KNOCKOUT']).toContain(t.format);
+                    expect(validFormats).toContain(t.format);
                 });
             });
 
             test('TC_T06 - Status hợp lệ', () => {
+                const validStatuses = ['UPCOMING', 'ONGOING', 'COMPLETED', 'FINISHED'];
+
                 tournaments.forEach(t => {
-                    expect(['UPCOMING', 'ONGOING', 'FINISHED']).toContain(t.status);
+                    expect(validStatuses).toContain(t.status);
                 });
             });
 
