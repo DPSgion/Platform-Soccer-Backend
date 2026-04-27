@@ -49,6 +49,54 @@ TRƯỜNG HỢP ĐÃ CÓ PROJECT
     "password": "123456"
     }
 - Nhấn Send → copy token trong response để test
+
+- quy trình kiểm thử hiệu năng cho Match (Trận đấu):
+	- Lấy Token:
+		+ POST 
+		-> https://backend.cupzone.fun/auth/login
+		+ Body:
+		{
+			"email": "minhngoc1907204@gmail.com",
+			"password": "12345678"
+		}
+		+ Scripts:
+		const jsonData = pm.response.json();
+		if (jsonData.data && jsonData.data.token) {
+			pm.environment.set("token", jsonData.data.token);
+		}
+	- Nhấn send -> copy token 
+	
+	- Tạo giải (nếu tài khoản chưa có giải):
+		+ POST
+		-> https://backend.cupzone.fun/tournaments/create
+		+ Body:
+		{
+			"name": "Giai Dau Test K6 Match",
+			"logo_url": "https://picsum.photos/200/200",
+			"description": "Test hieu nang Match",
+			"format": "LEAGUE",
+			"start_date": "2026-01-01",
+			"end_date": "2026-05-30"
+		}
+		+Authorization : 
+		->  Bearer Token 
+		-> Token : dán token copy lúc trước vào
+	-Nhấn send -> copy id Tournament
+	
+	-Tạo trận(Match)
+		+ POST
+		-> https://backend.cupzone.fun/matches
+		+Body (Yêu cầu có 2 team nếu chưa có thì coi ở tạo team):
+		{
+			"tournament_id": "id copy vừa nãy",
+			"home_team_id": "id team 1",
+			"away_team_id": "id team 2",
+			"stadium": "Sân STU",
+			"match_round": "Vòng Test",
+			"start_time": "2026-04-26 10:00:00" 
+		}
+	-> Token ban đầu copy khi login mới dùng để test match được 
+
 6. Chạy load test (k6): 
 - Tải k6:
     + Gõ: choco install k6
