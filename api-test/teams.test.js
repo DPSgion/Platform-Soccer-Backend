@@ -1476,3 +1476,91 @@ describe('DELETE /teams/{teamId}', () => {
     });
 
 });
+describe('GET /public/teams', () => {
+
+    it('TC113: Get public teams list', async () => {
+        const res = await axios.get(`${BASE_URL}/public/teams`);
+        expectFlexible(res.status, [200, 404]);
+    });
+
+    it('TC114: Search public teams', async () => {
+        const res = await axios.get(`${BASE_URL}/public/teams?search=test`);
+        expectFlexible(res.status, [200, 400]);
+    });
+
+    it('TC115: Get public teams without search (happy)', async () => {
+        const res = await axios.get(`${BASE_URL}/public/teams`);
+        expectFlexible(res.status, [200]);
+    });
+
+    it('TC116: Search with invalid query (unhappy)', async () => {
+        try {
+            await axios.get(`${BASE_URL}/public/teams?search=@@@@@`);
+        } catch (error) {
+            expectFlexible(error.response?.status, [400, 404]);
+        }
+    });
+
+});
+describe('GET /public/teams/{teamId}/members', () => {
+
+    it('TC117: Get public members list', async () => {
+        const team = await createTeam();
+
+        const res = await axios.get(`${BASE_URL}/public/teams/${team?.id}/members`);
+        expectFlexible(res.status, [200, 404]);
+    });
+
+    it('TC118: Get members with valid teamId (happy)', async () => {
+        const team = await createTeam();
+
+        const res = await axios.get(`${BASE_URL}/public/teams/${team?.id}/members`);
+        expectFlexible(res.status, [200]);
+    });
+
+    it('TC119: Get members with invalid teamId (unhappy)', async () => {
+        try {
+            await axios.get(`${BASE_URL}/public/teams/invalid-id/members`);
+        } catch (error) {
+            expectFlexible(error.response?.status, [400, 404]);
+        }
+    });
+
+});
+describe('GET /public/teams/{teamId}/members/{playerId}', () => {
+
+    it('TC120: Get public member detail', async () => {
+        const team = await createTeam();
+        const member = await createMember(team?.id);
+
+        const res = await axios.get(
+            `${BASE_URL}/public/teams/${team?.id}/members/${member?.id}`
+        );
+
+        expectFlexible(res.status, [200, 404]);
+    });
+
+    it('TC121: Get member detail with valid ids (happy)', async () => {
+        const team = await createTeam();
+        const member = await createMember(team?.id);
+
+        const res = await axios.get(
+            `${BASE_URL}/public/teams/${team?.id}/members/${member?.id}`
+        );
+
+        expectFlexible(res.status, [200]);
+    });
+
+    it('TC122: Get member detail with invalid playerId (unhappy)', async () => {
+        const team = await createTeam();
+
+        try {
+            await axios.get(
+                `${BASE_URL}/public/teams/${team?.id}/members/invalid-id`
+            );
+        } catch (error) {
+            expectFlexible(error.response?.status, [400, 404]);
+        }
+    });
+
+});

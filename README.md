@@ -49,7 +49,6 @@ TRƯỜNG HỢP ĐÃ CÓ PROJECT
     "password": "123456"
     }
 - Nhấn Send → copy token trong response để test
-
 6. Chạy load test (k6): 
 - Tải k6:
     + Gõ: choco install k6
