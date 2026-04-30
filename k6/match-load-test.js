@@ -48,8 +48,7 @@ export default function () {
     const matches = resJson?.data || [];
 
     if (matches.length === 0) {
-        // Chỉ log 1 lần để tránh spam log
-        console.warn('⚠️ Tài khoản sạch bong, không có trận nào!');
+        console.warn('Tài khoản sạch bong, không có trận nào!');
         return;
     }
 
